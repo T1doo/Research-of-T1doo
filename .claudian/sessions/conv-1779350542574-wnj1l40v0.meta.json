@@ -1,0 +1,24 @@
+{
+  "id": "conv-1779350542574-wnj1l40v0",
+  "providerId": "claude",
+  "title": "调整一下这个笔记的层次结构 太乱饿了",
+  "titleGenerationStatus": "failed",
+  "createdAt": 1779350542574,
+  "updatedAt": 1779362971593,
+  "lastResponseAt": 1779350644658,
+  "sessionId": "ced8ea49-e5d7-4ec9-9a86-0c113432f6f9",
+  "providerState": {
+    "providerSessionId": "ced8ea49-e5d7-4ec9-9a86-0c113432f6f9"
+  },
+  "currentNote": "曦源项目/立项/立项方向.md",
+  "usage": {
+    "model": "opus",
+    "inputTokens": 0,
+    "cacheCreationInputTokens": 0,
+    "cacheReadInputTokens": 0,
+    "contextWindow": 200000,
+    "contextTokens": 0,
+    "percentage": 0,
+    "contextWindowIsAuthoritative": true
+  }
+}

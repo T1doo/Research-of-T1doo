@@ -1,0 +1,5 @@
+{
+  "folder": "Diary",
+  "format": "YYYY-MM-DD dddd",
+  "template": "_templates/日记模板"
+}

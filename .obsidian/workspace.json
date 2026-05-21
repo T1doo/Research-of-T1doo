@@ -1,0 +1,225 @@
+{
+  "main": {
+    "id": "e73ec6b685438e45",
+    "type": "split",
+    "children": [
+      {
+        "id": "862a058394e9d505",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "b5854fd3de2f5bfb",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "曦源项目/立项/调研/INDEX.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "INDEX"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "191bba0e6799222b",
+    "type": "split",
+    "children": [
+      {
+        "id": "b8cd2a97fa684c3f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "d22b08b27d2deb4b",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "文件列表"
+            }
+          },
+          {
+            "id": "abefc9b3dfa52a59",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "搜索"
+            }
+          },
+          {
+            "id": "902c8e8bc69fa47a",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "书签"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "6fd8eb518d7bd153",
+    "type": "split",
+    "children": [
+      {
+        "id": "2771b7d5cb70064e",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "383731f470fc43ee",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Diary/2026-05-21 星期四.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "2026-05-21 星期四 的反向链接列表"
+            }
+          },
+          {
+            "id": "ad963b1716f1eb63",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "References/jiaActiontoActionFlowMatching2026.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "jiaActiontoActionFlowMatching2026 的出链列表"
+            }
+          },
+          {
+            "id": "d0840220b45fcefb",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "标签"
+            }
+          },
+          {
+            "id": "2701e2fd46531957",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "添加笔记属性"
+            }
+          },
+          {
+            "id": "b4aaae3fa895f512",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "References/jiaActiontoActionFlowMatching2026.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "jiaActiontoActionFlowMatching2026 的大纲"
+            }
+          },
+          {
+            "id": "6aeca326f23c171a",
+            "type": "leaf",
+            "state": {
+              "type": "calendar",
+              "state": {},
+              "icon": "calendar-with-checkmark",
+              "title": "Calendar"
+            }
+          },
+          {
+            "id": "b7bf748db7da7f34",
+            "type": "leaf",
+            "state": {
+              "type": "claudian-view",
+              "state": {},
+              "icon": "bot",
+              "title": "Claudian"
+            }
+          }
+        ],
+        "currentTab": 6
+      }
+    ],
+    "direction": "horizontal",
+    "width": 529.5
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false,
+      "bases:新建数据库": false,
+      "templater-obsidian:Templater": false,
+      "oz-clear-unused-images:Clear Unused Images": false,
+      "claudian:Open Claudian": false
+    }
+  },
+  "active": "b5854fd3de2f5bfb",
+  "lastOpenFiles": [
+    "曦源项目/立项/调研/05_Benchmark评测体系.md",
+    "曦源项目/立项/调研/INDEX.md",
+    "曦源项目/立项/调研/04_Baseline模型对比.md",
+    "曦源项目/立项/调研/03_方向三_鲁棒性微调.md",
+    "曦源项目/立项/调研/02_方向二_轻量级异常检测.md",
+    "曦源项目/立项/调研/01_方向一_动态自适应推理.md",
+    "曦源项目/立项/调研/00_总览与立项建议.md",
+    "Diary/2026-05-21 星期四.md",
+    "曦源项目/立项/立项方向.md",
+    "曦源项目/立项/调研",
+    "References/black$p_0$VisionLanguageActionFlow2026.md",
+    "References/jiaActiontoActionFlowMatching2026.md",
+    "曦源项目/立项/论文1.md"
+  ]
+}

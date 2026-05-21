@@ -1,0 +1,208 @@
+{
+  "recentFiles": [
+    {
+      "basename": "INDEX",
+      "path": "曦源项目/立项/调研/INDEX.md"
+    },
+    {
+      "basename": "05_Benchmark评测体系",
+      "path": "曦源项目/立项/调研/05_Benchmark评测体系.md"
+    },
+    {
+      "basename": "04_Baseline模型对比",
+      "path": "曦源项目/立项/调研/04_Baseline模型对比.md"
+    },
+    {
+      "basename": "03_方向三_鲁棒性微调",
+      "path": "曦源项目/立项/调研/03_方向三_鲁棒性微调.md"
+    },
+    {
+      "basename": "02_方向二_轻量级异常检测",
+      "path": "曦源项目/立项/调研/02_方向二_轻量级异常检测.md"
+    },
+    {
+      "basename": "01_方向一_动态自适应推理",
+      "path": "曦源项目/立项/调研/01_方向一_动态自适应推理.md"
+    },
+    {
+      "basename": "00_总览与立项建议",
+      "path": "曦源项目/立项/调研/00_总览与立项建议.md"
+    },
+    {
+      "basename": "2026-05-21 星期四",
+      "path": "Diary/2026-05-21 星期四.md"
+    },
+    {
+      "basename": "立项方向",
+      "path": "曦源项目/立项/立项方向.md"
+    },
+    {
+      "basename": "black$p_0$VisionLanguageActionFlow2026",
+      "path": "References/black$p_0$VisionLanguageActionFlow2026.md"
+    },
+    {
+      "basename": "jiaActiontoActionFlowMatching2026",
+      "path": "References/jiaActiontoActionFlowMatching2026.md"
+    },
+    {
+      "basename": "chiDiffusionPolicyVisuomotor2024",
+      "path": "References/chiDiffusionPolicyVisuomotor2024.md"
+    },
+    {
+      "basename": "shukorSmolVLAVisionLanguageActionModel2025",
+      "path": "References/shukorSmolVLAVisionLanguageActionModel2025.md"
+    },
+    {
+      "basename": "02 日常使用",
+      "path": "工作流/Zotero与obsidian连接/02 日常使用.md"
+    },
+    {
+      "basename": "guoRobustnessVisionLanguageActionModel2026",
+      "path": "References/guoRobustnessVisionLanguageActionModel2026.md"
+    },
+    {
+      "basename": "zhouRCNFRobotConditionedNormalizing2026",
+      "path": "References/zhouRCNFRobotConditionedNormalizing2026.md"
+    },
+    {
+      "basename": "liangAdaptiveActionChunking2026",
+      "path": "References/liangAdaptiveActionChunking2026.md"
+    },
+    {
+      "basename": "zotero-literature",
+      "path": "_templates/zotero-literature.md"
+    },
+    {
+      "basename": "笔记",
+      "path": "_templates/笔记.md"
+    },
+    {
+      "basename": "日记",
+      "path": "_templates/日记.md"
+    },
+    {
+      "basename": "师哥给的论文",
+      "path": "Research/曦源/师哥给的论文.md"
+    },
+    {
+      "basename": "Lecture18 以人为本的人工智能",
+      "path": "Lessons/计算机视觉/Lecture18 以人为本的人工智能.md"
+    },
+    {
+      "basename": "Lecture17 机器人学习",
+      "path": "Lessons/计算机视觉/Lecture17 机器人学习.md"
+    },
+    {
+      "basename": "Lecture16 视觉与语言",
+      "path": "Lessons/计算机视觉/Lecture16 视觉与语言.md"
+    },
+    {
+      "basename": "Lecture15 三维视觉",
+      "path": "Lessons/计算机视觉/Lecture15 三维视觉.md"
+    },
+    {
+      "basename": "Lecture14 生成模型（二）",
+      "path": "Lessons/计算机视觉/Lecture14 生成模型（二）.md"
+    },
+    {
+      "basename": "Lecture13 生成模型（一）",
+      "path": "Lessons/计算机视觉/Lecture13 生成模型（一）.md"
+    },
+    {
+      "basename": "Lecture12 自监督学习",
+      "path": "Lessons/计算机视觉/Lecture12 自监督学习.md"
+    },
+    {
+      "basename": "Lecture11 大规模分布式训练",
+      "path": "Lessons/计算机视觉/Lecture11 大规模分布式训练.md"
+    },
+    {
+      "basename": "Lecture10 视频理解",
+      "path": "Lessons/计算机视觉/Lecture10 视频理解.md"
+    },
+    {
+      "basename": "Lecture9 目标检测、图像分割与可视化",
+      "path": "Lessons/计算机视觉/Lecture9 目标检测、图像分割与可视化.md"
+    },
+    {
+      "basename": "Lecture8 注意力机制与Transformer",
+      "path": "Lessons/计算机视觉/Lecture8 注意力机制与Transformer.md"
+    },
+    {
+      "basename": "Lecture7 循环神经网络",
+      "path": "Lessons/计算机视觉/Lecture7 循环神经网络.md"
+    },
+    {
+      "basename": "Lecture6 CNN架构",
+      "path": "Lessons/计算机视觉/Lecture6 CNN架构.md"
+    },
+    {
+      "basename": "Lecture5 基于CNN的图像分类",
+      "path": "Lessons/计算机视觉/Lecture5 基于CNN的图像分类.md"
+    },
+    {
+      "basename": "2026-05-20 星期三",
+      "path": "Diary/2026-05-20 星期三.md"
+    },
+    {
+      "basename": "Lecture4 神经网络与反向传播",
+      "path": "Lessons/计算机视觉/Lecture4 神经网络与反向传播.md"
+    },
+    {
+      "basename": "Lecture3 正则化与优化",
+      "path": "Lessons/计算机视觉/Lecture3 正则化与优化.md"
+    },
+    {
+      "basename": "Lecture2 线性分类器进行图像分类",
+      "path": "Lessons/计算机视觉/Lecture2 线性分类器进行图像分类.md"
+    },
+    {
+      "basename": "Lecture1 导论",
+      "path": "Lessons/计算机视觉/Lecture1 导论.md"
+    },
+    {
+      "basename": "P01_1-1_教材",
+      "path": "Lessons/机器学习初步/P01_1-1_教材.md"
+    },
+    {
+      "basename": "P02_1-2_课程定位",
+      "path": "Lessons/机器学习初步/P02_1-2_课程定位.md"
+    },
+    {
+      "basename": "第20讲 2026.5.18",
+      "path": "Lessons/代数结构与数理逻辑/笔记/第20讲 2026.5.18.md"
+    },
+    {
+      "basename": "第7次作业 2026.5.19",
+      "path": "Lessons/数据库引论/作业/第7次作业 2026.5.19.md"
+    },
+    {
+      "basename": "2026-05-30 星期六",
+      "path": "Diary/2026-05-30 星期六.md"
+    },
+    {
+      "basename": "实验3_多周期MIPS处理器_实验报告",
+      "path": "Lessons/计算机组成与体系结构/lab/lab3/实验3_多周期MIPS处理器_实验报告.md"
+    },
+    {
+      "basename": "实验3 多周期MIPS处理器 操作步骤指南",
+      "path": "Lessons/计算机组成与体系结构/lab/lab3/实验3 多周期MIPS处理器 操作步骤指南.md"
+    },
+    {
+      "basename": "实验2_单周期MIPS处理器",
+      "path": "Lessons/计算机组成与体系结构/lab/lab2/实验2_单周期MIPS处理器.pdf"
+    },
+    {
+      "basename": "实验3_多周期MIPS处理器",
+      "path": "Lessons/计算机组成与体系结构/lab/lab3/实验3_多周期MIPS处理器.pdf"
+    },
+    {
+      "basename": "24307090032_李俊辉",
+      "path": "Lessons/计算机组成与体系结构/lab/lab2/24307090032_李俊辉.pdf"
+    }
+  ],
+  "omittedPaths": [],
+  "omittedTags": [],
+  "updateOn": "file-open",
+  "omitBookmarks": false
+}

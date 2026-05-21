@@ -1,0 +1,58 @@
+{
+  "collapse-filter": false,
+  "search": "",
+  "showTags": true,
+  "showAttachments": false,
+  "hideUnresolved": false,
+  "showOrphans": true,
+  "collapse-color-groups": false,
+  "colorGroups": [
+    {
+      "query": "tag:#diary  ",
+      "color": {
+        "a": 1,
+        "rgb": 15616406
+      }
+    },
+    {
+      "query": "tag:#lesson  ",
+      "color": {
+        "a": 1,
+        "rgb": 5092095
+      }
+    },
+    {
+      "query": "tag:#software  ",
+      "color": {
+        "a": 1,
+        "rgb": 13116937
+      }
+    },
+    {
+      "query": "tag:#homework  ",
+      "color": {
+        "a": 1,
+        "rgb": 9334488
+      }
+    },
+    {
+      "query": "tag:#Account  ",
+      "color": {
+        "a": 1,
+        "rgb": 6084269
+      }
+    }
+  ],
+  "collapse-display": false,
+  "showArrow": false,
+  "textFadeMultiplier": 0,
+  "nodeSizeMultiplier": 1,
+  "lineSizeMultiplier": 1,
+  "collapse-forces": false,
+  "centerStrength": 0.518713248970312,
+  "repelStrength": 10,
+  "linkStrength": 1,
+  "linkDistance": 250,
+  "scale": 0.88549895431504,
+  "close": true
+}

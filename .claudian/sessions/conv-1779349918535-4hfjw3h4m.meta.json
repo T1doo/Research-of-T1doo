@@ -1,0 +1,24 @@
+{
+  "id": "conv-1779349918535-4hfjw3h4m",
+  "providerId": "claude",
+  "title": "hi",
+  "titleGenerationStatus": "failed",
+  "createdAt": 1779349918536,
+  "updatedAt": 1779349931807,
+  "lastResponseAt": 1779349931807,
+  "sessionId": "b4d97c4c-88e0-4974-9940-18fe418d27fb",
+  "providerState": {
+    "providerSessionId": "b4d97c4c-88e0-4974-9940-18fe418d27fb"
+  },
+  "currentNote": "README.md",
+  "usage": {
+    "model": "opus",
+    "inputTokens": 0,
+    "cacheCreationInputTokens": 0,
+    "cacheReadInputTokens": 0,
+    "contextWindow": 200000,
+    "contextTokens": 0,
+    "percentage": 0,
+    "contextWindowIsAuthoritative": true
+  }
+}

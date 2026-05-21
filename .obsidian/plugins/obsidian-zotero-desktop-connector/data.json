@@ -1,0 +1,26 @@
+{
+  "database": "Zotero",
+  "noteImportFolder": "References",
+  "pdfExportImageDPI": 120,
+  "pdfExportImageFormat": "jpg",
+  "pdfExportImageQuality": 90,
+  "citeFormats": [
+    {
+      "name": "Markdown",
+      "format": "pandoc",
+      "brackets": true
+    }
+  ],
+  "exportFormats": [
+    {
+      "name": "文献笔记",
+      "outputPathTemplate": "References/{{citekey}}.md",
+      "imageOutputPathTemplate": "References/images",
+      "imageBaseNameTemplate": "{{citekey}}",
+      "templatePath": "_templates/zotero-literature.md"
+    }
+  ],
+  "citeSuggestTemplate": "[[{{citekey}}]]",
+  "openNoteAfterImport": true,
+  "whichNotesToOpenAfterImport": "first-imported-note"
+}

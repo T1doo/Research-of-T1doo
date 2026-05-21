@@ -1,0 +1,24 @@
+{
+  "id": "conv-1779362986625-sfaj19z9u",
+  "providerId": "claude",
+  "title": "附：复旦大学推免生遴选学业综合成绩折算表",
+  "titleGenerationStatus": "failed",
+  "createdAt": 1779362986625,
+  "updatedAt": 1779363024127,
+  "lastResponseAt": 1779363024127,
+  "sessionId": "e739bfe6-2105-41de-8105-ca04fe148ba0",
+  "providerState": {
+    "providerSessionId": "e739bfe6-2105-41de-8105-ca04fe148ba0"
+  },
+  "currentNote": "Diary/2026-05-21 星期四.md",
+  "usage": {
+    "model": "opus",
+    "inputTokens": 0,
+    "cacheCreationInputTokens": 0,
+    "cacheReadInputTokens": 0,
+    "contextWindow": 200000,
+    "contextTokens": 0,
+    "percentage": 0,
+    "contextWindowIsAuthoritative": true
+  }
+}
