@@ -1,6 +1,46 @@
 {
   "recentFiles": [
     {
+      "basename": "05_完整科研技术路线",
+      "path": "曦源项目/立项/二次调研/05_完整科研技术路线.md"
+    },
+    {
+      "basename": "06_创新点定位与论文卖点",
+      "path": "曦源项目/立项/二次调研/06_创新点定位与论文卖点.md"
+    },
+    {
+      "basename": "INDEX",
+      "path": "曦源项目/立项/二次调研/INDEX.md"
+    },
+    {
+      "basename": "02_RobustVLA相关工作扩展",
+      "path": "曦源项目/立项/二次调研/02_RobustVLA相关工作扩展.md"
+    },
+    {
+      "basename": "03_SmolVLA代码可注入点分析",
+      "path": "曦源项目/立项/二次调研/03_SmolVLA代码可注入点分析.md"
+    },
+    {
+      "basename": "04_交叉领域调研_efficient_robust",
+      "path": "曦源项目/立项/二次调研/04_交叉领域调研_efficient_robust.md"
+    },
+    {
+      "basename": "2026-05-22 星期五",
+      "path": "Diary/2026-05-22 星期五.md"
+    },
+    {
+      "basename": "日记模板",
+      "path": "_templates/日记模板.md"
+    },
+    {
+      "basename": "2026-05-21 星期四",
+      "path": "Diary/2026-05-21 星期四.md"
+    },
+    {
+      "basename": "立项方向",
+      "path": "曦源项目/立项/立项方向.md"
+    },
+    {
       "basename": "INDEX",
       "path": "曦源项目/立项/调研/INDEX.md"
     },
@@ -27,14 +67,6 @@
     {
       "basename": "00_总览与立项建议",
       "path": "曦源项目/立项/调研/00_总览与立项建议.md"
-    },
-    {
-      "basename": "2026-05-21 星期四",
-      "path": "Diary/2026-05-21 星期四.md"
-    },
-    {
-      "basename": "立项方向",
-      "path": "曦源项目/立项/立项方向.md"
     },
     {
       "basename": "black$p_0$VisionLanguageActionFlow2026",
@@ -75,10 +107,6 @@
     {
       "basename": "笔记",
       "path": "_templates/笔记.md"
-    },
-    {
-      "basename": "日记",
-      "path": "_templates/日记.md"
     },
     {
       "basename": "师哥给的论文",
@@ -171,34 +199,6 @@
     {
       "basename": "第20讲 2026.5.18",
       "path": "Lessons/代数结构与数理逻辑/笔记/第20讲 2026.5.18.md"
-    },
-    {
-      "basename": "第7次作业 2026.5.19",
-      "path": "Lessons/数据库引论/作业/第7次作业 2026.5.19.md"
-    },
-    {
-      "basename": "2026-05-30 星期六",
-      "path": "Diary/2026-05-30 星期六.md"
-    },
-    {
-      "basename": "实验3_多周期MIPS处理器_实验报告",
-      "path": "Lessons/计算机组成与体系结构/lab/lab3/实验3_多周期MIPS处理器_实验报告.md"
-    },
-    {
-      "basename": "实验3 多周期MIPS处理器 操作步骤指南",
-      "path": "Lessons/计算机组成与体系结构/lab/lab3/实验3 多周期MIPS处理器 操作步骤指南.md"
-    },
-    {
-      "basename": "实验2_单周期MIPS处理器",
-      "path": "Lessons/计算机组成与体系结构/lab/lab2/实验2_单周期MIPS处理器.pdf"
-    },
-    {
-      "basename": "实验3_多周期MIPS处理器",
-      "path": "Lessons/计算机组成与体系结构/lab/lab3/实验3_多周期MIPS处理器.pdf"
-    },
-    {
-      "basename": "24307090032_李俊辉",
-      "path": "Lessons/计算机组成与体系结构/lab/lab2/24307090032_李俊辉.pdf"
     }
   ],
   "omittedPaths": [],
