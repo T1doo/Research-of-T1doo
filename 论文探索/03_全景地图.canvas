@@ -1,0 +1,132 @@
+{
+  "nodes": [
+    {
+      "id": "title",
+      "type": "text",
+      "text": "# 具身智能鲁棒性全景地图\n\n3 主线 + 鲁棒性 3 层 taxonomy + 6 维 VLA-Risk 扰动\n\n2026-05-26 · T1doo 团队",
+      "x": -200,
+      "y": -800,
+      "width": 600,
+      "height": 200,
+      "color": "1"
+    },
+    {
+      "id": "layer1",
+      "type": "text",
+      "text": "## 层 1 · 输入扰动鲁棒\n\n- Visual perturbation\n- Instruction perturbation\n- State estimation noise\n- Cross-embodiment\n\n**FocusVLA 主战场**",
+      "x": -1000,
+      "y": -400,
+      "width": 400,
+      "height": 280,
+      "color": "4"
+    },
+    {
+      "id": "layer2",
+      "type": "text",
+      "text": "## 层 2 · 决策内禀鲁棒\n\n- Action 一致性\n- Worst-case 优化（DRO）\n- Out-of-distribution\n- Distribution shift\n\n**RobustVLA 主战场**",
+      "x": -400,
+      "y": -400,
+      "width": 400,
+      "height": 280,
+      "color": "2"
+    },
+    {
+      "id": "layer3",
+      "type": "text",
+      "text": "## 层 3 · 系统级安全\n\n- Failure detection (RC-NF)\n- Safety filter\n- Replanning / Recovery\n- Formal verification\n\n**相对空白 → 补盲机会**",
+      "x": 200,
+      "y": -400,
+      "width": 400,
+      "height": 280,
+      "color": "5"
+    },
+    {
+      "id": "lineA",
+      "type": "text",
+      "text": "## 主线 A · 视觉利用鲁棒性\n\n**锚点：FocusVLA (2603.28740)**\n\n- A1 Token pruning (VLA-Pruner, VLA-IAP, LUVC, TPRL)\n- A2 Attention guidance (Gaze-Reg, AutoFocus-IL)\n- A3 Patch selection (EF-VLA, GuidedVLA, ST-VLA)\n- A4 Visual grounding (ReKep, VoxPoser, SG-VLA)\n- A5 多视角融合 (GP3, MV-VDP, Action Images)\n- A6 Shortcut learning (Shortcut Diagnosis, InSpire, CAST, CF-VLA)\n- A7 Encoder 鲁棒 (SemanticVLA, Cobra, DINOBot)\n\n**28 篇精读**",
+      "x": -1200,
+      "y": 0,
+      "width": 500,
+      "height": 480,
+      "color": "4"
+    },
+    {
+      "id": "lineB",
+      "type": "text",
+      "text": "## 主线 B · 数据 & 训练侧鲁棒性\n\n**锚点：RobustVLA (2510.00037)**\n\n- B1 多模态对抗训练 (Eva-VLA, VLA-Fool, AdvDef)\n- B2 视觉数据增广 (BYOVLA, GreenAug, RoboEngine, RoboVIP)\n- B3 物理域随机化 (RoboCat, DR Survey)\n- B4 合成数据 / Sim-to-Real (RoboGen, Gen2Sim, Genesis, UniSim, Holodeck, RoboCasa, MimicGen)\n- B5 噪声 demo 鲁棒\n- B6 Worst-case / DRO (ReMix, DRO Library)\n- B7 Cross-embodiment (Open X, CrossFormer, HPT, X-VLA)\n\n**25 篇精读**",
+      "x": -500,
+      "y": 0,
+      "width": 500,
+      "height": 480,
+      "color": "2"
+    },
+    {
+      "id": "lineC",
+      "type": "text",
+      "text": "## 主线 C · 补盲方向\n\n**深耕候选：**\n\n⭐ C-iii 失败恢复 / Replanning\n   - RaC, RecoveryChaining, RePLan\n\n⭐ C-ix Test-Time Adaptation\n   - TT-VLA, VLA-RL, RoboMonkey\n\n✓ C-x Instruction Perturbation\n   - VLA-Risk, Annie, Jones et al.\n\n备选: C-ii UQ/OOD, C-vii World Model\n\n剔除: C-i (与 B1 重叠), C-iv/vi/viii (门槛过高)\n\n**10-15 篇精读**",
+      "x": 200,
+      "y": 0,
+      "width": 500,
+      "height": 540,
+      "color": "5"
+    },
+    {
+      "id": "benchmarks",
+      "type": "text",
+      "text": "## 评测基础设施\n\n**TOP-3 推荐：**\n\n1. **LIBERO-Plus** (7D perturb, 10K ep)\n2. **VLA-Arena** (170 task × L0-L2)\n3. **VLA-Risk** (6 维 ICLR 2026)\n\n备选：SimplerEnv, RoboChallenge\n\n**核心实证：**\n- 主流 VLA 在 LIBERO-PRO 上从 90% → 0%\n- 指令侧 ASR > 视觉侧（63.99% vs 38.91%）",
+      "x": 800,
+      "y": 0,
+      "width": 500,
+      "height": 380,
+      "color": "1"
+    },
+    {
+      "id": "classics",
+      "type": "text",
+      "text": "## VLA 谱系（baseline 池）\n\n- **轻量**：SmolVLA (0.45 B), NORA (3 B), OpenVLA-OFT\n- **主流**：OpenVLA (7 B), Octo, π0 / π0.5\n- **最新**：Gemini Robotics, FocusVLA\n- **经典锚点**：RT-1, RT-2, ACT, DiffusionPolicy",
+      "x": 800,
+      "y": 480,
+      "width": 500,
+      "height": 280,
+      "color": "1"
+    },
+    {
+      "id": "proposal",
+      "type": "text",
+      "text": "## 候选课题方案（见 01_课题排序）\n\n**主线交叉组合：**\n\n方案 1: FocusVLA + VLA-Risk 鲁棒性评测系统 (A × benchmark)\n方案 2: 失败恢复 + 鲁棒推理 (C-iii × B)\n方案 3: Test-Time Adaptation for FocusVLA (C-ix × A)\n方案 4: 指令鲁棒微调 (C-x × A)\n方案 5: Shortcut Learning 诊断与防御 (A6 × B6)\n\n**评分维度：**\n创新性 × 一年期可达性 × 顶会潜力 × 基础契合度",
+      "x": 1450,
+      "y": 0,
+      "width": 500,
+      "height": 480,
+      "color": "6"
+    },
+    {
+      "id": "constraints",
+      "type": "text",
+      "text": "## 关键约束\n\n- 一年期\n- 4-6 名本科生\n- ≤ 46 GB 显存\n- 中文为主输出\n- 不降低难度\n- 目标 CoRL/RSS/NeurIPS/ICLR\n\n## 已有基础\n\n9 篇 References 笔记\n（π0/π0.5/SmolVLA/RobustVLA/RC-NF/AAC/A2A/ACT/DiffusionPolicy）",
+      "x": -200,
+      "y": 600,
+      "width": 500,
+      "height": 380,
+      "color": "3"
+    }
+  ],
+  "edges": [
+    {"id": "e1", "fromNode": "title", "toNode": "layer1", "label": "层 1"},
+    {"id": "e2", "fromNode": "title", "toNode": "layer2", "label": "层 2"},
+    {"id": "e3", "fromNode": "title", "toNode": "layer3", "label": "层 3"},
+    {"id": "e4", "fromNode": "layer1", "toNode": "lineA", "label": "FocusVLA 主战场"},
+    {"id": "e5", "fromNode": "layer2", "toNode": "lineB", "label": "RobustVLA 主战场"},
+    {"id": "e6", "fromNode": "layer3", "toNode": "lineC", "label": "补盲机会"},
+    {"id": "e7", "fromNode": "lineA", "toNode": "benchmarks", "label": "用 VLA-Risk 评测"},
+    {"id": "e8", "fromNode": "lineB", "toNode": "benchmarks"},
+    {"id": "e9", "fromNode": "lineC", "toNode": "benchmarks"},
+    {"id": "e10", "fromNode": "lineA", "toNode": "classics", "label": "backbone 选择"},
+    {"id": "e11", "fromNode": "lineB", "toNode": "classics"},
+    {"id": "e12", "fromNode": "lineC", "toNode": "classics"},
+    {"id": "e13", "fromNode": "lineA", "toNode": "proposal", "label": "方案 1, 3, 5"},
+    {"id": "e14", "fromNode": "lineB", "toNode": "proposal", "label": "方案 2, 5"},
+    {"id": "e15", "fromNode": "lineC", "toNode": "proposal", "label": "方案 2, 3, 4"},
+    {"id": "e16", "fromNode": "proposal", "toNode": "constraints", "label": "受约束"}
+  ]
+}
