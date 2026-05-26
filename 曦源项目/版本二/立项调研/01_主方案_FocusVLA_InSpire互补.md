@@ -1,5 +1,6 @@
 ---
 create time: 2026-05-26T22:10:00
+update time: 2026-05-27T01:30:00（v2 修订摘要）
 tags:
   - 曦源项目
   - 版本二
@@ -7,7 +8,16 @@ tags:
   - FocusVLA
   - InSpire
   - Plan_A
+status: v2 修订（详见 08 最终方案）
 ---
+
+> [!note] v2 修订（2026-05-27）
+> 本文档保留作为 v1 历史记录。**v2 后续更新只在 [[08_最终方案_FocusVLA_InSpire互补研究]] 中维护**。核心修订：
+> - 4 变体（vanilla / +InSpire / +Focus-style / 叠加）→ **2 变体（vanilla / +InSpire）+ 视觉利用 ablation**
+> - 移除 "OpenVLA-OFT 作为 Focus-style 代理" 的 framing（不严谨）
+> - H1 从"两类方法强项不重叠"改为"显式提示在多维扰动上的鲁棒性增益"
+> - H2（叠加）降级为 discussion-level
+> - H3（failure predictor）保留
 # 01 · 主方案 · FocusVLA × InSpire 互补研究（Plan A）
 
 > **一句话定位**：用 InSpire 的 zero-data plugin（强制 VLA 先输出方向词再输出 action）作为**显式 spatial grounding**，对照 FocusVLA / OpenVLA-OFT 代表的**隐式 attention 聚焦**，在 LIBERO-Plus 7 维 × VLA-Risk 6 维扰动上系统验证两路 grounding 的鲁棒性差异、互补性、可叠加性。

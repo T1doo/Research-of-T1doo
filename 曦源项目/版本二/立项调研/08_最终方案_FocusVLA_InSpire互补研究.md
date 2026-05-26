@@ -1,22 +1,38 @@
 ---
 create time: 2026-05-26T23:00:00
+update time: 2026-05-27T01:00:00（v2 修订：scope 降级）
 tags:
   - 曦源项目
   - 版本二
   - 最终方案
   - FocusVLA
   - InSpire
-  - 工作版v1
-status: 工作版v1
+  - 工作版v2
+status: 工作版v2（scope 降级 · 2 变体 + ablation）
 audience: 项目组 + 导师 + workshop paper 撰写参考
+修订: v1 → v2 · 4 变体对照 → 2 变体 + 视觉利用 ablation（采纳外部审阅意见）
 ---
 
-# 08 · 最终方案 · FocusVLA × InSpire 互补研究（深度版）
+# 08 · 最终方案 · 显式空间提示插件 × VLA 扰动鲁棒性实证研究（深度版 v2）
 
 > [!warning] 使用说明
 > 本文档是**项目组内部技术工作版**，含数学命题、effect size 估计与广泛文献综述。
 > **不适合直接抄入曦源申请书**——申请书请参考 `版本二/递交材料/1-2.申请书填写草稿.md`，对标 2024 学长样本的简洁版。
 > 两份文档承担**完全不同的角色**，互斥使用。
+
+> [!note] v2 修订说明（2026-05-27）
+> **核心修订**：v1 提出的"4 模型变体（vanilla / +InSpire / +Focus-style / 叠加）系统对比"被识别出 framing 隐患——v1 用 OpenVLA-OFT 默认架构作为 "Focus-style 代理" 不严谨：
+> - OpenVLA-OFT 的实际贡献是 **fine-tuning recipe**（parallel decoding、action chunking、连续动作表示、L1 regression），不是"隐式视觉聚焦机制"
+> - 它不是 FocusVLA 的"简化版"，只是 FocusVLA 论文 § 2 批判的对照样本
+> - 评审会问"+Focus-style 变体到底是 FocusVLA 复现还是 OpenVLA-OFT 默认？" → 难以回答
+>
+> **v2 收缩为**：
+> - **2 个模型变体**：vanilla OpenVLA-OFT + 加 InSpire 显式提示插件
+> - **视觉利用 ablation 替代 Focus 对照**：visual token dropout / task-relevant patch mask / attention 可视化 —— 工程量小、不依赖 FocusVLA 复现、对 2 大二本科生可控
+> - **H1 重写**：从"显式 vs 隐式互补"改为"显式提示在不同扰动维度上的差异化表现"
+> - **H2 降级**：从核心假设降级为 discussion-level exploration（"两者叠加"已无对照实验基础）
+> - **H3 保留**：方向词 failure predictor 与 FocusVLA 无关，安全可做
+> - **FocusVLA 仍是相关工作**：在 § 2.2 讨论，并在 § 6 与导师叙事对齐中作为"灵感来源 + 未来工作目标"，不作为对照变体
 
 > [!info] 文档定位
 > - 整合 [[00_总览与立项决定]] ~ [[07_为什么不选其他方案]] 9 个立项调研文件的核心内容
@@ -28,7 +44,7 @@ audience: 项目组 + 导师 + workshop paper 撰写参考
 
 ## § 0 · TL;DR
 
-VLA（Vision-Language-Action）模型在标准 LIBERO clean SR 已达 95-99%，但在 LIBERO-Plus 等扰动评测下断崖式下跌至 30% 上下。提升鲁棒性目前有两条主要路径：**显式空间提示**（如 InSpire 的方向词 plugin，在 prompt+output 层注入信号）和**隐式注意力聚焦**（如 FocusVLA 的 Cascaded Attention + Focus Attention，在 attention 层切断 shortcut）。两条路径目前各自发展，**缺乏在统一 backbone × 统一评测协议下的系统对照**。本项目以 OpenVLA-OFT-7B 为统一主干，训练 4 个模型变体（vanilla / +InSpire / +Focus-style / +两者叠加），在 LIBERO-Plus 7 维 + VLA-Risk 6 维（stretch）扰动评测下验证 3 个核心假设：**H1（互补）** 两类方法的强项维度不重叠；**H2（叠加）** 两者组合平均 SR > max(单独) + 3pp；**H3（诊断）** 方向词预测可作为运行时 failure predictor（AUC ≥ 0.65）。预期产出 1 篇 4-6 页 workshop short paper（CoRL / ICLR / NeurIPS Robot Learning workshop）+ 开源 plugin 代码 + 方向词标注数据集。
+VLA（Vision-Language-Action）模型在标准 LIBERO clean SR 已达 95-99%，但在 LIBERO-Plus 等扰动评测下断崖式下跌至 30% 上下。学界近年提出多种鲁棒性增强思路，其中一类受关注的轻量方案是**显式空间提示**（如 InSpire 的方向词 plugin：在 prompt 前置方向问题，强制模型先输出方向词再输出 action）。这类方法工程门槛低，但**在多维扰动评测下的真实效果、以及它对模型视觉利用机制的实际影响，目前仍缺乏系统的实证研究**。本项目以 OpenVLA-OFT-7B 为统一主干，训练 **2 个模型变体**（vanilla / +InSpire），在 LIBERO-Plus 7 维扰动评测下验证两个核心假设：**H1（鲁棒性增益）** 显式方向词提示插件能在多个扰动维度上显著提升 VLA 鲁棒性；**H3（运行时诊断）** 方向词预测可作为 lightweight failure predictor（AUC ≥ 0.65）。为理解 H1 增益的来源，附加 **视觉利用 ablation**（visual token dropout / task-relevant patch mask / attention 可视化）作为机制层面的实证证据。**H2（与隐式聚焦的叠加）** 降级为 discussion-level exploration。预期产出 1 篇 4-6 页 workshop short paper（CoRL / ICLR / NeurIPS Robot Learning workshop）+ 开源 plugin 代码 + 方向词标注数据集。
 
 ---
 
@@ -61,13 +77,13 @@ VLA 模型在 LIBERO 4 个 task suite 上的 clean SR 普遍达 95-99%（FocusVL
 
 通过对 101 篇精读笔记（[[reference-paper-notes]]）与 17 篇新搜论文（详见 § 2）的整理，识别出三个明确空白：
 
-1. **FocusVLA 完全没在 robustness benchmark 上量化**——其论文只报 LIBERO clean 98.7%，4 大局限中第 #4 项明确写"未在 robustness benchmark 上系统评测"
-2. **显式 vs 隐式两类 grounding 缺乏直接对照**——所有相关论文都只评测自家方法 vs 其他 vanilla baseline，**没有任一论文同时在统一 backbone 上跑两条路径**
-3. **FocusVLA 局限 #2「对初始状态敏感」与 InSpire 的方向词 grounding 在方法学上正好可补**——方向词与机器人 frame 直接耦合，理论上正是初始状态扰动的天然解药
+1. **显式空间提示插件缺乏多维扰动下的系统验证**——InSpire 等显式提示方法的原论文只在 clean LIBERO 或自家定义的 OOD 上做评测，未在公开的 LIBERO-Plus 7 维扰动评测平台上做系统量化
+2. **显式提示对模型视觉利用机制的影响缺乏实证**——所有显式提示工作都假设"提示让模型更看图"，但缺乏直接的视觉利用 ablation（如 token dropout / patch mask / attention 可视化）来验证这一假设
+3. **方向词预测作为运行时 failure signal 未被探索**——InSpire 把方向词作为辅助监督信号，但其预测置信度时序是否能作为 failure predictor，目前没有论文验证
 
 ### 1.4 一句话研究问题
 
-> 在 LIBERO-Plus 7 维 + VLA-Risk 6 维扰动下，**显式 spatial grounding (InSpire)** 与**隐式 attention 聚焦 (FocusVLA / OpenVLA-OFT)** 是否在不同扰动维度上**强项互补**？两者是否可**无成本叠加**获得进一步增益？方向词预测是否可作为**轻量 failure predictor**？
+> 在 LIBERO-Plus 7 维扰动下，**轻量的显式方向词提示插件（InSpire 式）** 能否系统提升 VLA 模型的扰动鲁棒性？这种提升是否伴随**模型对任务相关视觉区域的更好利用**？方向词预测置信度是否可作为**轻量的运行时 failure predictor**？
 
 ---
 
@@ -160,69 +176,58 @@ VLA 模型在 LIBERO 4 个 task suite 上的 clean SR 普遍达 95-99%（FocusVL
 - **MultihopSpatial**（[arXiv:2603.18892](https://arxiv.org/abs/2603.18892)） ⭐ web-new ⭐：Multi-hop spatial reasoning benchmark
 - **SpatialLadder**（[arXiv:2510.08531](https://arxiv.org/abs/2510.08531)） ⭐ web-new ⭐：Progressive spatial reasoning training benchmark
 
-### 2.6 我们的定位
+### 2.6 我们的定位（v2 修订）
 
 所有上述相关工作中，**没有任一论文同时**：
-1. 在统一 backbone 上跑显式 + 隐式两条路径
-2. 在 LIBERO-Plus 7 维 + VLA-Risk 6 维上做完整扰动评测
-3. 把方向词预测作为 failure predictor（连接 § 2.4 的 Averaging Trap 理论）
+1. 在 LIBERO-Plus 7 维扰动平台上系统验证轻量显式空间提示插件的鲁棒性增益
+2. 通过视觉利用 ablation（token dropout / patch mask / attention 可视化）实证显式提示对模型视觉行为的影响
+3. 把方向词预测置信度作为运行时 failure predictor（连接 § 2.4 的 Averaging Trap 理论）
 
-本项目填补这三个交集。
+本项目填补这三个交集。**关于隐式视觉聚焦工作（如 FocusVLA、Spatial Forcing）**——它们提供了"VLA 视觉利用机制"的诊断视角与未来工作目标，但本项目不直接复现其架构改造（工程风险高、非本科一年期可承受），而是通过视觉 ablation 从另一个角度提供机制证据。
 
 ---
 
-## § 3 · 三个假设的形式化
+## § 3 · 两个核心假设的形式化 + 一个 discussion-level exploration（v2 修订）
 
-### 3.1 H1（互补假设）形式化
+### 3.1 H1（鲁棒性增益假设）形式化
 
-**命题**：令 $M \in \{\text{vanilla}, +\text{InSpire}, +\text{Focus}, +\text{两者}\}$，$d \in \{\text{layout, viewpoint, state, instruction, light, texture, noise}\}$（LIBERO-Plus 7 维）。定义 **perturbation drop**：
+**命题**：令 $M \in \{\text{vanilla}, +\text{InSpire}\}$，$d \in \{\text{layout, viewpoint, state, instruction, light, texture, noise}\}$（LIBERO-Plus 7 维）。定义 **perturbation drop**：
 
 $$\Delta_{M,d} = \text{SR}_{\text{clean}}(M) - \text{SR}_d(M)$$
 
-**可证伪声明**：存在维度子集 $D_{\text{spatial}} = \{\text{viewpoint}, \text{state}\}$ 与 $D_{\text{visual}} = \{\text{texture}, \text{light}\}$，使得：
+**可证伪声明**：在至少 2 个扰动维度上，$+\text{InSpire}$ 变体的 perturbation drop **显著小于** $\text{vanilla}$ 变体：
 
-$$\Delta_{+\text{InSpire}, d \in D_{\text{spatial}}} < \Delta_{+\text{Focus}, d \in D_{\text{spatial}}} - \tau$$
+$$\Delta_{+\text{InSpire}, d} < \Delta_{\text{vanilla}, d} - \tau, \quad \tau = 3\text{pp}, \quad p < 0.05$$
 
-$$\Delta_{+\text{Focus}, d \in D_{\text{visual}}} < \Delta_{+\text{InSpire}, d \in D_{\text{visual}}} - \tau$$
+（配对 t-test，Bonferroni 校正，7 维多重比较）
 
-其中 $\tau = 2$pp，置信度 $p < 0.05$（配对 t-test，Bonferroni 校正，每组 ≥ 2 维度）。
-
-**机制层面的辩护**：
-- 显式方向词与 robot frame 直接耦合 → viewpoint / state 变化时方向词仍稳定
-- 隐式 attention 聚焦在 feature 层提取 task-relevant patch → texture / distractor 时仍能保持注意力
+**预期"显著维度"假设**：基于先验机制分析，最可能显著的维度是 **viewpoint** 与 **state**（因为方向词与机器人 frame 强耦合）；最不可能显著的维度是 **instruction**（因为 LIBERO-Plus 论文报告该维度对所有 VLA 都不显著）。
 
 **预期 effect size**：
 - LIBERO-Plus 论文报告 7 维 std 约 4-7pp / dim
 - 3 seed × 500 instance/cell，5pp 差异的 statistical power ≈ 0.85
-- FocusVLA-style 在 cascaded 上报 +3.4pp，InSpire 在 OpenVLA-7B 上 rev2 报 4 task 平均 +5-8pp
+- InSpire 在 OpenVLA-7B 上 rev2 报 4 task 平均 +5-8pp（clean OOD setting）；在 perturbed 设置下预期 +3-7pp（保守估计）
 
 **Fallback 策略**：
-- 仅 1 维度显著 → 改叙事为「主要互补维度在 X」
-- 完全重叠 → 改叙事为「显式 ≈ 隐式，两路 → 同一种 grounding」，反直觉发现仍可投 workshop
+- 仅 1 维度显著 → 改叙事为「主要增益维度在 X」
+- 完全不显著 → 改叙事为「轻量提示不足以救扰动鲁棒性」——这本身是有价值的 negative finding
+- 在 viewpoint / state 上反而恶化 → 检查方向词 GT 推导的几何对齐问题（一般是 bug）
 
-### 3.2 H2（叠加假设）形式化
+**视觉利用 ablation 作为机制层面证据**（不是 H 假设，但是 H1 论证的关键组件）：
+为理解 H1 的 SR 提升是否来自"模型更看图"，附加三组 ablation：
+1. **Visual token dropout**：在 inference 时随机 mask N% visual tokens（N ∈ {10, 30, 50}），看 SR 退化曲线
+2. **Task-relevant patch mask**：用方向词 GT 倒推 task-relevant patch，定向 mask 这些 patch，看 SR 退化
+3. **Attention 可视化**：对比 vanilla 与 +InSpire 在同一 episode 上的 attention 分布
 
-**命题**：
+预期：+InSpire 变体的 attention 应更集中在 task-relevant 区域；如果 (3) 显示无显著差异，需要在 § Discussion 中诚实标注"我们的提示插件可能没有显著改变 attention，但仍提升了 SR"——这本身是有价值的发现。
 
-$$\overline{\text{SR}}(+\text{两者}) > \max(\overline{\text{SR}}(+\text{InSpire}), \overline{\text{SR}}(+\text{Focus})) + 3\text{pp}$$
+### 3.2 H2（discussion-level · 不作为核心假设）
 
-其中 $\overline{\text{SR}}(M) = \frac{1}{7} \sum_d \text{SR}_d(M)$ 是 LIBERO-Plus 7 维平均 SR。
+> **v2 修订说明**：v1 的 H2 是"InSpire + Focus-style 叠加 > max(单独) + 3pp"，依赖 4 变体对照实验。v2 取消 Focus-style 变体后，**H2 无法作为受控实验验证**，因此降级为 discussion-level 探讨。
 
-**不要求超过和**（即不需要 $\overline{\text{SR}}_{\text{两者}} > \overline{\text{SR}}_{\text{InSpire}} + \overline{\text{SR}}_{\text{Focus}}$），只要求 **+3pp 阈值**——这是"非负超线性"，即两者叠加不会拖累任一方且能进一步增益。
-
-**机制层面的辩护**：
-- InSpire 在 output cls head + prompt 层注入信号
-- Focus-style 在 attention feature 层改造
-- 两者作用在 transformer 不同位置 → 理论上正交，无参数共享 → 无干扰
-
-**3pp 阈值的选择依据**：
-- LIBERO-Plus 论文中 best vs 2nd-best gap 通常 2-5pp
-- 3pp 是"可发表"的最低增益 threshold（small effect at workshop level）
-
-**Fallback 策略**：
-- +0~+3pp：写"无显著叠加，但不冲突"——workshop 接受
-- -3pp~0pp：写"两者在某些 task 上冲突"——本身是 finding
-- < -3pp：彻底冲突 → 切叙事到 H1 单独 + H3 单独
+**讨论方向**（不要求实证）：
+- 未来工作中，若 FocusVLA 官方代码发布，可在 OpenVLA-OFT + InSpire 基础上嫁接 Cascaded Attention 验证叠加效应
+- 本项目通过视觉利用 ablation 间接探讨"显式提示 + 隐式 attention 改造"是否潜在互补——例如 ablation (3) 如果显示 +InSpire 改变了 attention 分布，那 FocusVLA 类的架构改造可能是冗余的；反之，两者可能正交
 
 ### 3.3 H3（诊断假设）形式化
 
@@ -259,30 +264,44 @@ InSpire 方向词预测作为 lightweight failure signal 是对 [Averaging Trap 
 
 ## § 4 · 实验设计
 
-### 4.1 4 模型变体详细配置
+### 4.1 模型变体与 ablation 配置（v2 修订）
+
+**核心训练变体（2 个）**：
 
 | 变体 | Backbone | Prompt | Cls head | Loss | Note |
 |---|---|---|---|---|---|
 | **vanilla** | OpenVLA-OFT-7B + LoRA(r=16) | 原 LIBERO instruction | ❌ | action regression | 基线 |
-| **+InSpire** | 同上 | 前置 "In which direction is the [target]..." | 7-class direction head | action reg + 0.1 × direction CE | 显式 grounding |
-| **+Focus-style** | 同上 | 原 instruction | ❌ | action regression | 用 OpenVLA-OFT 默认配置作为 "隐式聚焦" 代理（详见 § 2.2） |
-| **+InSpire & Focus** | 同上 | 前置方向词问题 | 7-class direction head | action reg + 0.1 × direction CE | 叠加 |
+| **+InSpire** | 同上 | 前置 "In which direction is the [target]..." | 7-class direction head | action reg + 0.1 × direction CE | 显式空间提示 |
 
 **LoRA 配置**：r=16，alpha=32，dropout=0.05，target_modules = q_proj, k_proj, v_proj, o_proj。显存预算 < 40GB（单卡 A100）。
 
-**训练数据**：LIBERO-Spatial / Object / Goal / Long 4 suites，每 task 50 demo，共 ~26000 trajectory。LIBERO 4 suite 单卡 8h 完成（参考 OpenVLA-OFT 原论文）。
+**训练数据**：LIBERO-Spatial / Object / Goal / Long 4 suites，每 task 50 demo，共 ~26000 trajectory。LIBERO 4 suite 单 LoRA 训练单卡 8-10h 完成（参考 OpenVLA-OFT 原论文）。
 
-### 4.2 数据流 pipeline
+**视觉利用 ablation（推理时进行，不需要重新训练）**：
+
+| Ablation | 操作 | Setup | 目的 |
+|---|---|---|---|
+| **Token Dropout** | 在 inference 时随机 mask N% visual tokens | N ∈ {10, 30, 50} × 2 变体 = 6 组 | 看 SR 退化曲线是否对 vanilla / +InSpire 有差异 |
+| **Patch Mask** | 用方向词 GT 倒推 task-relevant patch，定向 mask | 2 变体 × 2 maskpattern = 4 组 | 测试模型对 task-relevant patch 的依赖度 |
+| **Attention 可视化** | 对比 vanilla / +InSpire 在同一 episode 上的 attention 分布 | 定性分析 + 量化 attention entropy | 探究 InSpire 是否改变 attention 行为 |
+
+**关于 FocusVLA 复现**：本项目**不复现** Cascaded Attention 与 Focus Attention 架构。FocusVLA 出现在 § 2 相关工作与 § 6 与导师叙事对齐，作为 _未来工作目标_（若官方代码 release 后可在 OpenVLA-OFT + InSpire 基础上嫁接）但不在主路径中。
+
+### 4.2 数据流 pipeline（v2 修订）
 
 ```mermaid
 graph LR
     A[LIBERO demos hdf5] -->|robot eef pose + object pose| B[方向词 GT 标注脚本]
     B -->|7-class label per step| C[训练 data]
-    C --> D[4 变体 LoRA 训练]
+    C --> D[2 变体 LoRA 训练<br/>vanilla / +InSpire]
     D --> E[checkpoint]
     E --> F[LIBERO-Plus 7 维评测]
-    F --> G[28-cell SR 矩阵]
-    G --> H[H1 互补归因 / H2 叠加检验 / H3 failure predictor]
+    F --> G[14-cell SR 矩阵]
+    G --> H1[H1 鲁棒性增益归因]
+    E --> I[视觉利用 ablation<br/>token dropout / patch mask / attention 可视化]
+    I --> H1
+    E --> J[方向词预测时序收集]
+    J --> H3[H3 failure predictor]
 ```
 
 **方向词 GT 标注脚本核心逻辑**（附录 A 给出完整伪代码）：
@@ -292,11 +311,26 @@ graph LR
 4. 检查 grasped 状态（距离 < ε + gripper closed）→ 标 "grasped"
 5. 滑动平均 3 步去抓取/释放瞬间的方向词跳变
 
-### 4.3 评测协议
+### 4.3 评测协议（v2 修订）
 
-**主评测**：LIBERO-Plus 7 维 × 4 变体 = 28 cell。每 cell 跑 **3 seed × 500 instance** = 1500 episode。
+**主评测**：LIBERO-Plus 7 维 × 2 变体 = **14 cell**（v1 是 28 cell）。每 cell 跑 **3 seed × 500 instance** = 1500 episode。
 
-**总成本估算**：28 × 1500 × 30s = ~117 GPU-h（单 A100，inference 速度参考 OpenVLA-OFT 报告）。
+**总评测成本估算**：14 × 1500 × 30s ≈ **60 GPU-h**（单 A100，inference 速度参考 OpenVLA-OFT 报告）。
+
+**视觉利用 ablation 评测成本**：
+- Token dropout：6 组 × 7 维子集（取 3 维 viewpoint/state/texture 高 power 维度）× 3 seed × 200 instance ≈ 30 GPU-h
+- Patch mask：4 组 × 同上 ≈ 20 GPU-h
+- Attention 可视化：定性分析 ~ 5 GPU-h
+
+**训练成本**：
+- vanilla LoRA × 3 seed ≈ 30 GPU-h
+- +InSpire LoRA × 3 seed ≈ 30 GPU-h
+
+**总成本估算**：60 + 30 + 20 + 5 + 30 + 30 ≈ **175 GPU-h**（v1 估算为 120，v2 修订因加入 ablation 与训练成本而上调）。
+
+**预算重排建议**（详见 [[04_团队分工与预算]] v2 修订）：
+- 云端 GPU 拨款从 ¥3,600 上调至 ¥5,500（约 180 GPU-h）
+- 挤压 API（¥1,500 → ¥800）、数据存储（¥600 → ¥400）、文献检索（¥800 → ¥300）等次要项
 
 **统计方法**：
 - 每 cell 报告 mean ± std（3 seed）
@@ -306,7 +340,7 @@ graph LR
 
 **附加评测（stretch goal）**：
 - LIBERO-Para 2 子集（语言改写）：补强 instruction 维度
-- VLA-Risk 6 维子集（如代码 release）：附加 attention 评测
+- VLA-Risk 6 维子集（如代码 release）
 
 ### 4.4 消融实验
 
@@ -333,25 +367,25 @@ graph LR
 
 ## § 5 · 时间线与决策点
 
-### 5.1 5 phase Gantt
+### 5.1 5 phase Gantt（v2 修订）
 
 | Phase | 月份 | 核心动作 | 预期产出物 |
 |---|---|---|---|
 | **P1 复现 InSpire on OpenVLA-OFT** | M1-M2 (06-07) | 环境搭建 + 方向词标注脚本 + InSpire plugin sanity check | OpenVLA-OFT clean baseline 数字 + 方向词预测准确率 > 50% |
-| **P2 4 变体 × 7 维评测** | M3-M5 (08-10) | 28 cell 完整跑通 | 7×4 SR 矩阵 + 配对 t-test 结果 |
-| **P3 互补性归因分析** | M6-M7 (11-12) | 维度分组 + 统计显著性 | H1 验证 + 雷达图 + 4 变体在每维度上的箱图 |
+| **P2 2 变体 × 7 维评测** | M3-M5 (08-10) | 14 cell 完整跑通 + 视觉利用 ablation | 7×2 SR 矩阵 + ablation 退化曲线 + 配对 t-test 结果 |
+| **P3 鲁棒性增益归因分析** | M6-M7 (11-12) | 维度归因 + 统计显著性 + attention 可视化 | H1 验证 + 维度级 SR drop 对比 + attention 分布图 |
 | **P4 Failure predictor** | M8-M9 (01-02) | 收集 2k episode + LightGBM | H3 验证 + AUC ≥ 0.65 |
 | **P5 写作 + 投稿** | M10-M12 (03-05) | workshop short paper 撰写 + 投稿 | 至少 1 个 workshop 投出 |
 
-### 5.2 4 个关键 Go/No-Go 节点
+### 5.2 4 个关键 Go/No-Go 节点（v2 修订）
 
 详细决策树见 [[05_风险与缓解]] § 3。简要 4 节点：
 
 | 节点 | Go 条件 | No-Go 应对 |
 |---|---|---|
 | **M2 末** | 方向词准确率 > 50% & action SR ≥ vanilla - 10pp | < 30% → 切 [[02_备选方案_FocusVLA鲁棒性诊断]] |
-| **M5 末** | H1 至少 1 维度强项不重叠 | 完全重叠 → 改"两路等价"叙事 |
-| **M7 末** | 互补归因每组 ≥ 2pp，p<0.05 | 不显著 → 增 episode 数 / 换 baseline |
+| **M5 末** | H1 至少 1 维度显著增益（+InSpire 比 vanilla drop 小 3pp，p<0.05） | 完全无增益 → 改"轻量提示不足以救扰动鲁棒"的 negative finding workshop |
+| **M7 末** | 视觉利用 ablation 显示 +InSpire 与 vanilla 在 token dropout / patch mask 上有差异化退化 | 无差异 → 改叙事为"InSpire 的增益不通过改善视觉利用实现"（仍可投） |
 | **M9 末** | failure predictor AUC ≥ 0.65 | < 0.6 → 改描述性可视化 |
 
 ### 5.3 Plan A → Plan B 切换决策树
@@ -360,18 +394,22 @@ graph LR
 
 ---
 
-## § 6 · 与导师推荐叙事的对齐
+## § 6 · 与导师推荐叙事的对齐（v2 修订）
 
-导师明确推荐 FocusVLA 作为"导航星论文"。本项目对该论文作者自述的 **4 大局限**逐一回应：
+导师明确推荐 FocusVLA 作为"导航星论文"。本项目通过"轻量显式提示 + 视觉利用 ablation"的路径，回应 FocusVLA 提出的**视觉利用问题**，并对其 4 大局限分别给出本项目的处理方式：
 
-| FocusVLA 自述局限 | 本项目如何回应 |
+| FocusVLA 自述局限 | 本项目如何回应（v2） |
 |---|---|
-| **#1「鲁棒性对背景 + 纹理同时变化仍有限」** | § 4.4 消融中包含多扰动叠加专项；H1 的 $D_{\text{visual}}$ 组直击 |
-| **#2「对初始状态敏感」** | H1 的 $D_{\text{spatial}}$ 组**核心切入点**——验证 InSpire 方向词是否能补这个洞 |
-| **#3「VLM 内部的视觉利用没涉及」** | § 7 未来工作明确列入，但不在本项目主路径 |
-| **#4「未在 robustness benchmark 上系统评测」** | § 4 整个评测设计的**核心贡献**——首次在 LIBERO-Plus 7 维 + VLA-Risk 6 维上量化 Focus-style 的鲁棒增益 |
+| **#1「鲁棒性对背景 + 纹理同时变化仍有限」** | 通过 LIBERO-Plus 的 light + texture 维度评测，验证 InSpire 显式提示在视觉扰动下的表现 |
+| **#2「对初始状态敏感」** | H1 的**核心切入点**——验证 InSpire 的方向词（与 robot frame 直接耦合）是否能在 viewpoint / state 扰动下提供鲁棒性 |
+| **#3「VLM 内部的视觉利用没涉及」** | **本项目从另一角度提供证据**——通过视觉 token ablation 与 attention 可视化（§ 4.1），实证检验显式提示是否改变了模型的视觉利用行为；这是对 FocusVLA 视角的有益补充 |
+| **#4「未在 robustness benchmark 上系统评测」** | § 4 整个评测设计响应这一空白——在 LIBERO-Plus 7 维评测平台上系统量化轻量提示插件的鲁棒性增益 |
 
-**叙事一致性**：本项目不是"否定 FocusVLA"，而是"补齐 FocusVLA 自己留的洞 + 找一条同 backbone 不同思路的对照"。导师推荐的导航星定位被严格尊重。
+**叙事一致性**：本项目**接受 FocusVLA 提出的核心论断**——VLA 鲁棒性差与视觉利用机制有关——但**采取一条更轻量、更工程可控的路径**：用显式提示 + 视觉 ablation 取代架构层改造。FocusVLA 仍是本项目的灵感来源与未来工作目标（若官方代码 release，可在 OpenVLA-OFT + InSpire 基础上嫁接 Cascaded Attention 验证组合）。
+
+**对评审可能问题的预案**：
+- Q："你为什么不直接复现 FocusVLA？" → A：FocusVLA 代码未公开，完整复现 Cascaded + Focus Attention 对 2 大二本科生工程风险过高；本项目通过视觉 ablation 从另一角度提供机制证据，与 FocusVLA 互补而非替代
+- Q："你的视觉 ablation 是新方法吗？" → A：Token dropout 与 attention 可视化是 ML 通用工具，本项目的贡献是把它们**首次用于评估 VLA 显式提示插件的视觉利用机制**
 
 ---
 
@@ -572,7 +610,7 @@ Out: Action: [action_tokens]"
 （与 +InSpire 同 prompt，backbone 同 +Focus-style）
 ```
 
-## 附录 C · 全部 28 cell 实验运行检查清单
+## 附录 C · 全部 14 cell 实验运行检查清单（v2 修订）
 
 | Cell | 变体 | 维度 | 状态 | 备注 |
 |---|---|---|---|---|
@@ -585,10 +623,22 @@ Out: Action: [action_tokens]"
 | C07 | vanilla | noise | ⏳ |  |
 | C08 | +InSpire | layout | ⏳ |  |
 | C09 | +InSpire | viewpoint | ⏳ |  |
-| ... | ... | ... | ... |  |
-| C28 | +InSpire & Focus | noise | ⏳ |  |
+| C10 | +InSpire | state | ⏳ |  |
+| C11 | +InSpire | instruction | ⏳ |  |
+| C12 | +InSpire | light | ⏳ |  |
+| C13 | +InSpire | texture | ⏳ |  |
+| C14 | +InSpire | noise | ⏳ |  |
 
-完整 28 行清单在 P1 末期填充。每 cell 需记录：3 seed SR、std、与 vanilla baseline 的 paired t-test p 值。
+完整 14 行清单在 P1 末期填充。每 cell 需记录：3 seed SR、std、与 vanilla baseline 的 paired t-test p 值。
+
+**视觉利用 ablation 单独跟踪**：
+| Ablation 组 | 变体 | 维度子集 | 状态 |
+|---|---|---|---|
+| Token Dropout N=10 | vanilla / +InSpire | viewpoint, state, texture | ⏳ |
+| Token Dropout N=30 | vanilla / +InSpire | viewpoint, state, texture | ⏳ |
+| Token Dropout N=50 | vanilla / +InSpire | viewpoint, state, texture | ⏳ |
+| Patch Mask | vanilla / +InSpire | viewpoint, state | ⏳ |
+| Attention 可视化 | vanilla / +InSpire | 定性分析 | ⏳ |
 
 ---
 

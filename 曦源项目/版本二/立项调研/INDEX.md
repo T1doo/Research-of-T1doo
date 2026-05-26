@@ -1,16 +1,27 @@
 ---
 create time: 2026-05-26T22:00:00
+update time: 2026-05-27T01:30:00（v2 修订：scope 降级）
 tags:
   - 曦源项目
   - 版本二
   - 立项调研
   - INDEX
+status: v2 修订
 ---
 # 版本二 · 立项调研索引
 
-> **项目定位**：基于显式空间推理插件的 VLA 鲁棒性实证研究——FocusVLA 谱系 × InSpire 谱系的交叉验证
-> **状态**：立项调研期（2026-05-26 起）
+> **项目定位（v2）**：**基于显式空间推理插件的视觉-语言-动作模型扰动鲁棒性实证研究**
+> **状态**：立项调研期（2026-05-26 起，v2 修订 2026-05-27）
 > **团队**：2 名大二本科生 · ¥10K 预算 · 1 年（2026-06 → 2027-06）
+
+> [!note] v2 修订摘要（2026-05-27）
+> 采纳外部审阅意见，scope 降级：
+> - 4 模型变体（含 Focus-style 代理）→ **2 变体（vanilla / +InSpire）+ 视觉利用 ablation**
+> - 移除"OpenVLA-OFT 作为 Focus-style 代理"的不严谨 framing
+> - H2（叠加假设）降级为 discussion-level（无 4 变体对照）
+> - 项目命名简化（移除"FocusVLA 谱系 × InSpire 谱系交叉验证"）
+> - GPU 预算重排：¥3,600 → ¥5,500
+> - 详见 [[08_最终方案_FocusVLA_InSpire互补研究]] v2 修订说明
 
 ## 阅读顺序
 
@@ -26,20 +37,21 @@ tags:
 | 07 | [[07_为什么不选其他方案]] | 候选 B（架构改造）+ 其他 4 候选不适合现约束的原因 | ⭐ |
 | **08** | [[08_最终方案_FocusVLA_InSpire互补研究]] | **整合 + 深化版** · 7500 字 · 含 4 子主题 20+ 篇文献综述 · H1-H3 数学化 · 后续 workshop paper §1-§3 素材库 | ⭐⭐⭐ |
 
-## 核心叙事一句话
+## 核心叙事一句话（v2 修订）
 
-> "FocusVLA 用**隐式 attention 聚焦**获得了鲁棒性增益，但作者自述局限 #2 是「对初始状态敏感」——而 InSpire 的**显式方向词 grounding** 正好可以补这个洞。我们做的是这两条路（显式 vs 隐式 grounding）在 LIBERO-Plus 7 维 × VLA-Risk 6 维扰动上的**系统化互补研究**。"
+> "FocusVLA 等近期工作指出 VLA 鲁棒性差与视觉利用机制有关。本项目沿这条诊断视角，但走一条更轻量的路径：用 InSpire 式**显式方向词提示插件**在 LIBERO-Plus 7 维扰动评测下做系统验证，并通过**视觉利用 ablation**（token dropout / patch mask / attention 可视化）实证检验显式提示是否改善了模型对任务相关视觉区域的利用。"
 
-## 关键决定一览
+## 关键决定一览（v2 修订）
 
 | 维度 | 决定 |
 |---|---|
-| 主推方案 | **候选 C · FocusVLA × InSpire 互补研究** |
-| 备选方案 | **候选 A · FocusVLA-Probe 鲁棒性诊断**（共用 pipeline） |
-| 排除方案 | 候选 B（手写 Cascaded Attention，工程风险过高） |
+| 主推方案 | **轻量显式空间提示插件 + 视觉利用 ablation 实证研究** |
+| 备选方案 | [[02_备选方案_FocusVLA鲁棒性诊断]]（纯评测路线兜底） |
+| 排除方案 | 完整复现 FocusVLA Cascaded + Focus Attention（工程风险过高） |
 | Backbone | OpenVLA-OFT-7B（主）/ SmolVLA-0.5B（备） |
-| Benchmark | LIBERO-Plus 7 维 · VLA-Risk 6 维 · LIBERO（clean baseline） |
-| 评测变体 | vanilla / +InSpire / Focus-style / +InSpire & Focus-style |
+| Benchmark | LIBERO-Plus 7 维 · LIBERO（clean baseline）· LIBERO-Para（stretch） |
+| 核心训练变体 | **vanilla / +InSpire（共 2 个）** |
+| 视觉 ablation | token dropout × 3 setting / patch mask / attention 可视化 |
 | 投稿目标 | CoRL/ICLR/NeurIPS Robot Learning workshop（4-6 页短稿） |
 
 ## 与版本一的关系
@@ -57,8 +69,8 @@ tags:
 
 | 文件 | 位置 | 状态 |
 |---|---|---|
-| 申请书填写草稿 | [[../递交材料/1-2.申请书填写草稿]] | ✅ 起草版 v1（对标 2024 学长样本） |
-| 申请书 .doc（待填） | `版本二/递交材料/1-2.【需提交】曦源项目申请书（2026年版）.doc` | ⏳ 待按草稿填写 |
+| 申请书填写草稿 | [[../递交材料/1-2.申请书填写草稿]] | ✅ **起草版 v2**（scope 降级 · 对标 2024 学长样本） |
+| 申请书 .doc（待填） | `版本二/递交材料/1-2.【需提交】曦源项目申请书（2026年版）.doc` | ⏳ 待按草稿 v2 填写 |
 | 立项信息表 | 待写 | ⏳ |
 
 > ⚠️ **重要提醒**：申请书草稿对标 [[../../版本一/递交材料/1-2.曦源项目申请书（2024年版）.doc]]（2024 学长李博实际申请书），格式严格简洁。**不要从 [[08_最终方案_FocusVLA_InSpire互补研究]] 抄内容到申请书**——08 是内部技术工作版，含数学公式和 30+ 文献，不适合本科生申请。两份文档**互斥使用**。
