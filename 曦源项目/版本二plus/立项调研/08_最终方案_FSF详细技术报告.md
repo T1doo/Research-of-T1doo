@@ -19,7 +19,7 @@ audience: 项目组 + 师哥 + workshop paper 撰写主参考
 
 ## § 0 · TL;DR
 
-VLA 模型在标准 LIBERO clean SR 已达 95-99%，但在 LIBERO-Plus 等扰动评测下断崖式下跌至 30% 上下。**版本二**已确认 OpenVLA-OFT + InSpire 显式方向词提示插件路线可行（师哥确认）。**版本二plus**在此基础上新增 **Focused Spatial Forcing (FSF) 通道**——以冻结的 FastVGGT 为 teacher，对 OpenVLA-OFT Layer 24 视觉 token 做余弦相似度对齐；对齐 loss 的 per-token 权重由 **方向词 GT × SAM2 × DINOv2 CLS attention 三源融合的 focus mask** 调制（前景 1.0 / 上下文 0.5 / 背景 0.1），对应师哥提示的"focus 在重要位置，背景监督可以弱点"。本项目以 OpenVLA-OFT-7B 为统一主干，训练 **3 个模型变体**（V1: vanilla / V2: +InSpire / V3: +InSpire+FSF），在 LIBERO-Plus 7 维扰动 + 真机 3 维扰动两个轴下验证 **5 个核心假设**：H1 仿真鲁棒性增益、H2 InSpire×FSF 叠加效应、H3 failure predictor（继承 v2）、H4 真机鲁棒性增益、H5 多源 focus mask 优于单源/均匀。预期产出 1 篇 4-6 页 workshop short paper（CoRL/ICLR/NeurIPS Robot Learning workshop）+ 开源 plugin 代码 + 方向词标注/Focus mask/VGGT 缓存/真机数据 4 个 HuggingFace 数据集。
+VLA 模型在标准 LIBERO clean SR 已达 95-99%，但在 LIBERO-Plus 等扰动评测下断崖式下跌至 30% 上下。**版本二**已确认 OpenVLA-OFT + InSpire 显式方向词提示插件路线可行（师哥确认）。**版本二plus**在此基础上新增 **Focused Spatial Forcing (FSF) 通道**——以冻结的 FastVGGT 为 teacher，对 OpenVLA-OFT Layer 24 视觉 token 做余弦相似度对齐；对齐 loss 的 per-token 权重由 **方向词 GT × DINOv2 CLS attention 双源融合的 focus mask**（**v2 纯净路径，不引入 SAM2**）调制（前景 1.0 / 上下文 0.5 / 背景 0.1），对应师哥提示的"focus 在重要位置，背景监督可以弱点"。本项目以 OpenVLA-OFT-7B 为统一主干，训练 **3 个模型变体**（V1: vanilla / V2: +InSpire / V3: +InSpire+FSF），在 LIBERO-Plus 7 维扰动 + 真机 3 维扰动两个轴下验证 **5 个核心假设**：H1 仿真鲁棒性增益、H2 InSpire×FSF 叠加效应、H3 failure predictor（继承 v2）、H4 真机鲁棒性增益、H5 双源 focus mask 优于单源/均匀。预期产出 1 篇 4-6 页 workshop short paper（CoRL/ICLR/NeurIPS Robot Learning workshop）+ 开源 plugin 代码 + 方向词标注/Focus mask/VGGT 缓存/真机数据 4 个 HuggingFace 数据集。
 
 ## § 1 · 问题陈述与研究空白
 
@@ -42,7 +42,7 @@ VLA 模型在 LIBERO 4 个 task suite 上的 clean SR 普遍达 95-99%（FocusVL
 | **FocusVLA** (2603.28740) | 隐式 attention | Cascaded + Focus attention | ❌ | **高**（架构改造） | 0 |
 | **OpenVLA-OFT** (2502) | 隐式 architecture | 省略视觉特征 shortcut | ❌ | 低（架构选择） | 0 |
 | **Spatial Forcing** (2510.12276) | **隐式 encoder align** | VGGT teacher 中间层对齐 | ❌ | **低**（~30 行） | 0 |
-| **FSF（本项目）** | **InSpire + Spatial Forcing + Focus Mask 三层叠加** | output + encoder + mask 调制 | ❌（继承 v2 + SAM2/DINOv2 自动） | 中 | +1 token decode |
+| **FSF（本项目）** | **InSpire + Spatial Forcing + Focus Mask 三层叠加** | output + encoder + mask 调制 | ❌（继承 v2 + DINOv2 自动；不依赖 SAM2） | 中 | +1 token decode |
 | FocusVLA-VGGT | 隐式 encoder concat | policy 阶段并行 encoder | ❌ | 中（FocusVLA 自述"梯度弱"） | 0 |
 
 **三路差异本质**：
@@ -62,7 +62,7 @@ VLA 模型在 LIBERO 4 个 task suite 上的 clean SR 普遍达 95-99%（FocusVL
 
 ### 1.4 一句话研究问题
 
-> 在 LIBERO-Plus 7 维扰动 + 真机 3 维扰动下，**显式方向词提示插件（InSpire）与聚焦式 3D 表征对齐（Focused Spatial Forcing）叠加**，能否进一步系统提升 VLA 模型的扰动鲁棒性？**多源融合的 focus mask 是否优于单源或均匀监督？**
+> 在 LIBERO-Plus 7 维扰动 + 真机 3 维扰动下，**显式方向词提示插件（InSpire）与聚焦式 3D 表征对齐（Focused Spatial Forcing）叠加**，能否进一步系统提升 VLA 模型的扰动鲁棒性？**双源融合的 focus mask 是否优于单源或均匀监督？**
 
 ## § 2 · 相关工作（5 子主题广覆盖）
 
@@ -103,7 +103,7 @@ VGGT（CVPR 2025 Best Paper，[arXiv:2503.11651](https://arxiv.org/abs/2503.1165
 
 详见 [[研究报告/04_Focus_Mask_设计调研]]。本项目 Focus mask 3 个来源的相关工作：
 - Source A（方向词 GT）→ 继承 v2 InSpire 工具
-- Source B（SAM2 物体硬 mask）→ Grounded SAM (2401.14159) + SAM2
+- Source B（SAM2/GroundedSAM）→ **不引入**（v2 纯净路径；P3 stretch ablation 可选）
 - Source C（DINOv2 CLS attention）→ AttentionVoxel (2509.20579) 直接证明此 saliency 思路 + Gaze-Reg VLA + AutoFocus-IL
 
 ### 2.5 Shortcut Learning、Failure Detection 与 Benchmark
@@ -139,7 +139,7 @@ $$\text{AUC}(f) \ge 0.65 \quad \text{(5-fold CV)}$$
 
 $$\overline{\Delta_{V3}^{real}} < \overline{\Delta_{V1}^{real}} - 5\text{pp}, \quad p < 0.10$$
 
-### H5（多源 focus mask 优于单源/均匀，v2plus 核心创新）
+### H5（双源 focus mask 优于单源/均匀，v2plus 核心创新）
 
 $$\text{SR}_{M\text{-}ABC} > \max(\text{SR}_{M\text{-}A}, \text{SR}_{M\text{-}B}, \text{SR}_{M\text{-}C}) + 1\text{pp}$$
 $$\text{SR}_{M\text{-}ABC} > \text{SR}_{M\text{-}None} + 1.5\text{pp}, \quad p < 0.05$$
@@ -188,7 +188,7 @@ $$\text{SR}_{M\text{-}ABC} > \text{SR}_{M\text{-}None} + 1.5\text{pp}, \quad p <
 | **3D teacher** | **`mystorm/FastVGGT` (HF)** | ✅ **已开源** |
 | 模拟器 | robosuite + MuJoCo | ✅ 开源（LIBERO 自带） |
 | 主评测 benchmark | LIBERO-Plus (`senyufei/LIBERO-Plus`) | ✅ HF 开源 |
-| Focus mask 工具 | GroundedSAM + SAM2 + DINOv2 | ✅ 全部开源 |
+| Focus mask 工具 | **DINOv2**（已在 OpenVLA-OFT 中）+ 方向词 GT 投影（v2 复用）| ✅ 全部开源；**不依赖 SAM2** |
 | 真机平台 | LeRobot SO-100 / Franka（实验室已有） | ✅ 用户确认 |
 | InSpire 代码 | UESTC | ⏳ 待 release；200 行可手写 |
 | Spatial Forcing 代码 | OpenHelix Team | ✅ 已开源 (github.com/OpenHelix-Team/Spatial-Forcing) |
@@ -214,7 +214,7 @@ $$\text{SR}_{M\text{-}ABC} > \text{SR}_{M\text{-}None} + 1.5\text{pp}, \quad p <
 |---|---|---|
 | **N0** (M0 末) | 4 仓库装通 + FastVGGT mIoU ≥ 0.5 + 真机就绪 | 切 v2 only / VGGT 原版 fallback |
 | **N1** (M3 末) | V3 clean SR ≥ V1 - 3pp & VGGT 缓存完整 | V3 退化 > 10pp → 切 v2 only |
-| **N2** (M6 末) | H1 ≥ 2 维度显著 & H5 M-ABC > M-None | 完全无增益 → negative finding workshop |
+| **N2** (M6 末) | H1 ≥ 2 维度显著 & H5 M-AC > M-None | 完全无增益 → negative finding workshop |
 | **N3** (M9 末) | H4 ≥ 5pp & 视觉 ablation 显示 V3 对前景 patch 依赖更高 | 退化 → 真机降级为 case study |
 | **N4** (M11 末) | AUC ≥ 0.65 & 论文数据齐全 | 不齐 → 转 ICLR/CCC（更晚 deadline） |
 
@@ -228,7 +228,7 @@ $$\text{SR}_{M\text{-}ABC} > \text{SR}_{M\text{-}None} + 1.5\text{pp}, \quad p <
 | "按 InSpire 的会，要在真机上验证" | 3 任务 × 50 demo × 3 扰动维度 = 360 episode 真机评测 |
 | "参考 arXiv:2510.12276 隐式 3D 表征对齐" | FSF loss 直接采用 SF 论文公式 |
 | "FocusVLA 也用了 VGGT，看做法是否有区别" | 详述 SF（中间层对齐优等）vs FocusVLA（policy 并行劣等） |
-| "Spatial forcing 但需要 focus 在重要位置，背景可弱点" | 多源融合 focus mask（前景 1.0 / 上下文 0.5 / 背景 0.1） |
+| "Spatial forcing 但需要 focus 在重要位置，背景可弱点" | 双源融合 focus mask（前景 1.0 / 上下文 0.5 / 背景 0.1） |
 | "VGGT 续作可以大致看下" | FastVGGT 主选 + π³/StreamVGGT/HD-VGGT 续作综述 |
 
 ## § 7 · 局限与未来工作
@@ -269,7 +269,7 @@ $$\text{SR}_{M\text{-}ABC} > \text{SR}_{M\text{-}None} + 1.5\text{pp}, \quad p <
 |---|---|---|---|
 | § 1 Intro | 500 | § 0 TL;DR + § 1 | (1) VLA 鲁棒性 30% 鸿沟；(2) 显式 vs 隐式 grounding；(3) 3D 监督的必要性；(4) focus 思想；(5) 5 个核心假设 |
 | § 2 Related | 700 | § 2 + [[06_关联资料索引]] | (1) 3D-aware VLA；(2) Focus/attention guidance；(3) Explicit grounding；(4) Benchmark |
-| § 3 Method | 1000 | § 4.1 + [[01_主方案_FocusedSpatialForcing]] | (1) 架构图；(2) Loss 公式；(3) Focus mask 多源融合；(4) VGGT 缓存；(5) 训练协议 |
+| § 3 Method | 1000 | § 4.1 + [[01_主方案_FocusedSpatialForcing]] | (1) 架构图；(2) Loss 公式；(3) Focus mask 双源融合；(4) VGGT 缓存；(5) 训练协议 |
 | § 4 Experiment | 1500 | § 4.3 + § 4.4 + ablation | (1) Setup（LIBERO-Plus + 真机）；(2) 主结果 21 cell；(3) 真机 360 episode；(4) Ablation A1-A6；(5) H3 failure predictor |
 | § 5 Discussion | 500 | § 7 + [[05_风险与缓解]] | (1) FSF 增益机制讨论；(2) 局限；(3) 未来工作 |
 | 参考文献 | — | [[06_关联资料索引]] 精简到 25-30 篇 | — |
@@ -310,7 +310,7 @@ ShortcutLearning in VLA、CF-VLA、RobustVLA
 
 详见 [[01_主方案_FocusedSpatialForcing]] § 4.2。
 
-## 附录 C · Focus Mask 三源融合伪代码
+## 附录 C · Focus Mask 双源融合伪代码（v2 纯净路径）
 
 详见 [[01_主方案_FocusedSpatialForcing]] § 3 与 [[研究报告/04_Focus_Mask_设计调研]]。
 

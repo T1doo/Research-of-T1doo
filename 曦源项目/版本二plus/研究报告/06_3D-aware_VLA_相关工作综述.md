@@ -33,7 +33,7 @@ related:
 ## TL;DR
 
 - **核心论点**：3D-aware VLA 自 2024 年起井喷，按"3D 信号注入方式"可分为 **5 大类**（显式深度、显式点云、单目深度估计、多视图重建、隐式 3D 对齐）和 **3 个辅助维度**（多 token 互补、spatial CoT、显式提示）。
-- **v2plus 的定位**：属于**隐式 3D 对齐 + 多源 saliency 调制**的独特组合——前者继承自 [[01_Spatial_Forcing_深度精读|Spatial Forcing]]，后者是 v2plus 的核心增量。
+- **v2plus 的定位**：属于**隐式 3D 对齐 + 双源 saliency 调制**的独特组合——前者继承自 [[01_Spatial_Forcing_深度精读|Spatial Forcing]]，后者是 v2plus 的核心增量。
 - **空白点确认**：通过 §9 8 维度对比矩阵可看出，"隐式 3D 对齐 + Focus Mask + 显式提示"的组合在 30+ 个调研对象中**没有任何工作覆盖**。
 - **关键追踪对象**：未来 6 个月需重点跟踪 5 篇可能撞车的工作（详见 §11）。
 
@@ -578,7 +578,7 @@ flowchart TD
 - LIBERO 平均 97.7%。
 - 在长程任务上提升约 3%。
 
-**v2plus 相关性**：高。ST-VLA 的"4D mask"思路与 v2plus 的 "Focus Mask" 同源，但 ST-VLA 的 mask 是端到端学习的，v2plus 的 mask 是多源融合先验。在 ablation 中可以加入"learned mask" 作为对照。
+**v2plus 相关性**：高。ST-VLA 的"4D mask"思路与 v2plus 的 "Focus Mask" 同源，但 ST-VLA 的 mask 是端到端学习的，v2plus 的 mask 是双源融合先验（方向词 GT + DINOv2 CLS attention）。在 ablation 中可以加入"learned mask" 作为对照。
 
 ### 7.3 GraphCoT-VLA（arXiv:2508.07650）
 
@@ -695,7 +695,7 @@ flowchart TD
 | ACoT-VLA | None (CoT) | Language CoT | Prismatic-7B | LIBERO, OpenX | 97.5 | 无 | 中 | CVPR 2026 |
 | LaST | None (Latent CoT) | Latent reasoning | Prismatic-7B | LIBERO | 97.8 | 无 | 中 | 2026-01 |
 | Hier. Lang-Act | Sub-goal hierarchy | Multi-level action | Prismatic-7B | LIBERO-Long | 97.4 | 无 | 中 | 2026-04 |
-| **v2plus** | **VGGT + 多源 Saliency Mask** | **中间层蒸馏 + Focus Mask 调制** | **Prismatic-7B** | **LIBERO** | **目标 ≥ 99.0** | **无** | **低** | **2026-05** |
+| **v2plus** | **VGGT + 双源 Saliency Mask** | **中间层蒸馏 + Focus Mask 调制** | **Prismatic-7B** | **LIBERO** | **目标 ≥ 99.0** | **无** | **低** | **2026-05** |
 
 ### 9.2 关键观察
 
@@ -732,7 +732,7 @@ v2plus 目标 ≥ 99.0%——这是基于：
 |---------|----------|
 | ST-VLA (端到端学习 mask) | SF, Evo-0, Recurrent-Depth, VIPA-VLA, GP3, FocusVLA, ... |
 
-**ST-VLA 虽然用了 4D mask，但用于 action prediction loss，不是 align loss。** 在"用多源 saliency mask 调制 VGGT 蒸馏 loss"的精确组合上，v2plus 是**第一个**。
+**ST-VLA 虽然用了 4D mask，但用于 action prediction loss，不是 align loss。** 在"用双源 saliency mask 调制 VGGT 蒸馏 loss"的精确组合上，v2plus 是**第一个**。
 
 ### 9.3 性能-成本-部署 三角图
 
@@ -762,32 +762,34 @@ v2plus 位于"低训练成本 + 低部署开销 + 高性能"的理想象限。
 
 ### 10.1 一句话定位
 
-**v2plus = Spatial Forcing 范式 + 多源 Focus Mask 调制 + 显式指令模板（继承自 v2/v3）**
+**v2plus = Spatial Forcing 范式 + 双源 Focus Mask 调制 + 显式指令模板（继承自 v2）**
 
 ### 10.2 三个独特性
 
-#### 独特性 1：隐式 3D 对齐路线 + 多源 saliency mask
+#### 独特性 1：隐式 3D 对齐路线 + 双源 saliency mask
 
-如 §9.2 观察 5 所述，"VGGT 蒸馏 + 多源 saliency mask 调制 align loss" 在已知工作中没有先例。
+如 §9.2 观察 5 所述，"VGGT 蒸馏 + 双源 saliency mask 调制 align loss" 在已知工作中没有先例。
 
 #### 独特性 2：Focus Mask 三段量化对应师哥语言
 
 师哥提示"focus 在重要位置，不相关背景监督可以更弱点"——v2plus 用三段量化（1.0 / 0.5 / 0.1）直接对应这三档需求。详见 [[04_Focus_Mask_设计调研]] §6。
 
-#### 独特性 3：继承 v2/v3 工具链
+#### 独特性 3：继承 v2 工具链（保持纯净升级路径）
 
-v2plus 不是从零开始的新项目，而是 T1doo 团队 v2 → v3 → v2plus 的演进：
+v2plus 不是从零开始的新项目，而是 T1doo 团队 v2 → v2plus 的"最简增量"演进：
 - v2：方向词标注 + Gaussian 工具 → 复用为 Source A。
-- v3：SAM2 + GroundingDINO 工具链 → 复用为 Source B。
-- v2plus：在 SF 基础上加 Focus Mask，集成 v2 + v3 工具。
+- DINOv2 CLS attention：OpenVLA-OFT vision encoder 中已自带 → 复用为 Source C。
+- v2plus：在 SF 基础上加 Focus Mask，集成 v2 工具 + DINOv2 副产物。
 
-这种"内部工具复用"路径是 v2plus 区别于外部工作的关键——其他团队复制 v2plus 需要先实现 v2 / v3 工具链，门槛较高。
+> **设计取舍说明**：v2plus 设计稿曾考虑引入 SAM2 作 Source B（v3 工具链），但因"v2 + FSF 最简增量"原则未引入；P3 stretch ablation 可作备用。SAM2 在论文 §2 Related 中作为相关工作（SAM2Act 等）提及。
+
+这种"v2 工具复用 + DINOv2 免费副产物"路径是 v2plus 区别于外部工作的关键——其他团队复制 v2plus 需要先实现 v2 方向词工具链，门槛较高。
 
 ### 10.3 v2plus 在 8 维矩阵中的精确位置
 
 | 维度 | v2plus 值 | 与最相近工作的差异 |
 |------|----------|------------------|
-| 3D 信号 | VGGT + 多源 Saliency Mask | SF 只有 VGGT，v2plus 多了 mask |
+| 3D 信号 | VGGT + 双源 Saliency Mask | SF 只有 VGGT，v2plus 多了 mask |
 | 监督方式 | 中间层蒸馏 + Focus Mask 调制 | SF 是 uniform 蒸馏，v2plus 是加权蒸馏 |
 | Backbone | Prismatic-7B | 与 SF 一致 |
 | Benchmark | LIBERO | 与 SF 一致 |
@@ -812,11 +814,11 @@ v2plus 与以下工作在不同维度上协同，未来可结合：
 
 ### 10.5 v2plus 的核心创新点（答辩用）
 
-**第一句**："v2plus 把 Spatial Forcing 的 VGGT 蒸馏范式扩展为多源 saliency-guided 蒸馏。"
+**第一句**："v2plus 把 Spatial Forcing 的 VGGT 蒸馏范式扩展为双源 saliency-guided 蒸馏。"
 
 **第二句**："核心思路是 focus mask 调制 per-token align loss——让前景区域获得强 3D 监督，背景区域获得弱 3D 监督。"
 
-**第三句**："Focus Mask 由 v2 工具（方向词 Gaussian）+ v3 工具（SAM2）+ 免费副产物（DINOv2 CLS attention）三源融合得到。"
+**第三句**："Focus Mask 由 v2 工具（方向词 Gaussian）+ 免费副产物（DINOv2 CLS attention）双源融合得到（v2plus 设计稿曾考虑引入 SAM2 作 Source B，但因 v2 工具链纯净性原则未引入；P3 stretch ablation 可作备用）。"
 
 **第四句**："这一组合在 30+ 篇相关工作的 8 维度对比中是空白点。"
 
@@ -858,9 +860,9 @@ v2plus 与以下工作在不同维度上协同，未来可结合：
 
 **v2plus 的护城河**：
 
-- **v2 / v3 工具链**：外部团队复制需要先复现 v2 + v3，门槛中等。
-- **多源融合 ablation**：v2plus 的 Ablation 表（M-A / M-B / M-C / M-AB / M-ABC / M-Random）较为完整，外部团队需要花时间补全。
-- **真机 demo**：如果 v2plus 一期能在真机上展示效果（Source B + C 真机可用），可立即建立先发优势。
+- **v2 工具链**：外部团队复制需要先复现 v2 方向词标注工具，门槛中等。
+- **双源融合 ablation**：v2plus 的 Ablation 表（M-None / M-A / M-C / M-AC / M-Random，共 5 组）较为完整，外部团队需要花时间补全。
+- **真机 demo**：如果 v2plus 一期能在真机上展示效果（Source A + C 真机可用），可立即建立先发优势。
 
 ### 11.3 持续追踪的具体行动项
 
@@ -901,8 +903,8 @@ v2plus 与以下工作在不同维度上协同，未来可结合：
 
 1. **大类定位**："v2plus 属于隐式 3D 对齐路线，部署时不需要任何 3D 硬件。"
 2. **父本论证**："父本是 Spatial Forcing（NeurIPS 2025），LIBERO 98.5%，训练加速 3.8×。"
-3. **差异化**："v2plus 在 SF 基础上加入多源 Focus Mask，让对齐监督专注于任务相关区域。"
-4. **空白点**："'隐式 3D 蒸馏 + 多源 saliency mask'的组合在 30+ 篇相关工作中没有先例。"
+3. **差异化**："v2plus 在 SF 基础上加入双源 Focus Mask，让对齐监督专注于任务相关区域。"
+4. **空白点**："'隐式 3D 蒸馏 + 双源 saliency mask'的组合在 30+ 篇相关工作中没有先例。"
 5. **目标**："期望性能从 98.5% 提升到 ≥ 99.0%，训练效率保持 SF 水平。"
 
 ### 12.3 与 FocusVLA 的差异化（重点）
@@ -914,7 +916,7 @@ v2plus 与以下工作在不同维度上协同，未来可结合：
 - [[01_Spatial_Forcing_深度精读]]：SF 算法的逐行精读。
 - [[02_VGGT_及后续工作综述]]：VGGT 及多视图重建工具的综述。
 - [[03_FocusVLA_中_VGGT_用法剖析]]：FocusVLA vs SF 的 head-to-head 对比。
-- [[04_Focus_Mask_设计调研]]：Focus Mask 三源 + 四融合策略详细。
+- [[04_Focus_Mask_设计调研]]：Focus Mask 双源（Source A + Source C）融合策略详细。
 - **本报告（06）**：3D-aware VLA 全景综述。
 
 ---

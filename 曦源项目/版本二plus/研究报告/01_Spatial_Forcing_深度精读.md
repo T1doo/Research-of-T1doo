@@ -499,7 +499,7 @@ $$\alpha^* = 0.5,\quad \text{容忍区间} = [0.3, 0.8]$$
 | Student 取层 | LLM Layer 24 | 是 | 不变 |
 | 投影 | BN + 2MLP + PE | 是 | 不变 |
 | Loss 形式 | -cos | 是 | 但加入 $m_i$ 权重 |
-| 监督 mask | 均匀 1 | **否** | **FSF 增量：三源融合 focus mask** |
+| 监督 mask | 均匀 1 | **否** | **FSF 增量：双源融合 focus mask（方向词 GT + DINOv2）** |
 
 ---
 
@@ -600,17 +600,20 @@ FSF 的 focus mask 来源（[[01_主方案_FocusedSpatialForcing]] § 3）：
 | Mask 来源 | 类型 | 维度 | 含义 |
 |---|---|---|---|
 | $m^A$：方向词 GT mask | 来自 InSpire 的 7-class direction GT 映射 | $\{0,1\}^{256}$ | 哪些 token 在 action 方向上有 grounding |
-| $m^B$：SAM2 mask | SAM2 用 task prompt 抠出的物体 mask | $\{0,1\}^{256}$ | 任务物体所占 token |
-| $m^C$：DINOv2 CLS attention | DINOv2 CLS token 对 patch 的 attention | $[0,1]^{256}$ | 视觉显著性 |
+| $m^C$：DINOv2 CLS attention | DINOv2 CLS token 对 patch 的 attention | $[0,1]^{256}$ | 视觉显著性（DINOv2 已在 OpenVLA-OFT vision encoder 中，免费副产物） |
+
+> **说明**：v2plus 设计稿曾考虑引入 SAM2 作 Source B，但因 v2 工具链纯净性原则未引入；P3 stretch ablation 可作备用。SAM2 在论文 §2 Related 中作为相关工作（SAM2Act 等）提及。
 
 **融合规则**（[[01_主方案_FocusedSpatialForcing]] § 3.4）：
 
 $$
-m_i = \mathrm{quantize}(F_1(m_i^A, m_i^B, m_i^C)) \in \{0.1, 0.5, 1.0\}
+m_i = \mathrm{quantize}(F_1(m_i^A, m_i^C)) \in \{0.1, 0.5, 1.0\}
 $$
 
+其中 $F_1(m^A, m^C) = \mathrm{clip}(0.5 \cdot m^A + 0.5 \cdot m^C, 0.1, 1.0)$。
+
 具体：
-- $m^A_i = 1$ 或 $m^B_i = 1$ 或 $m^C_i > 0.7$ → $m_i = 1.0$（前景）
+- $m^A_i = 1$ 或 $m^C_i > 0.7$ → $m_i = 1.0$（前景）
 - 0.3 < $m^C_i \le 0.7$ → $m_i = 0.5$（上下文）
 - 其他 → $m_i = 0.1$（背景）
 
@@ -627,7 +630,7 @@ $$
 
 | 未做事项 | FSF 拓展 | 依据 |
 |---|---|---|
-| **Focus mask 来源融合** | 三源 mask 加权融合 | InSpire + SAM2 + DINOv2 文献支持 |
+| **Focus mask 来源融合** | 双源 mask 加权融合（方向词 GT + DINOv2） | InSpire + DINOv2 文献支持 |
 | **真机评测**（仅 RoboTwin sim） | 计划在 ALOHA 上跑 4 个任务 | 师哥建议 + RoboTwin 真机已证 SF 跨域 |
 | **与 InSpire 叠加** | direction CE + FSF cosine 双 loss | [[09_与版本二差异化说明]] § 2 |
 | **FastVGGT 替换 VGGT** | 训练加速 ~4× | [[02_VGGT_及后续工作综述]] § 4.1 |
@@ -640,7 +643,6 @@ $$
 graph LR
     SF["Spatial Forcing<br/>(ICLR2026 submitted)"] --> FSF
     InSpire["InSpire<br/>(Direction grounding)"] --> FSF
-    SAM2 --> FSF
     DINOv2 --> FSF
     FastVGGT["FastVGGT<br/>(ICLR2026 submitted)"] --> FSF
     FSF["FSF-VLA<br/>(本项目 v2plus)"]
@@ -667,7 +669,7 @@ SF 论文 § 5（p.10）：
 | SF 局限 | FSF 解决方案 |
 |---|---|
 | α 不自适应 | focus mask 调制提供 token 级自适应 |
-| 铰接物体弱 | SAM2 提供 instance-level 强先验 |
+| 铰接物体弱 | DINOv2 CLS attention 提供视觉显著性先验（v2plus 不引入 SAM2，保持 v2 工具链纯净） |
 | 未用 temporal | v3 plus 计划接入 VGGT-Long（[[02_VGGT_及后续工作综述]] § 4.3） |
 | 显存压力 | FastVGGT 训练显存降 40% + 离线缓存 + fp8 量化 |
 | **新增**：监督信号被背景淹没 | focus mask 主动加权前景 |

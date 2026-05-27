@@ -17,7 +17,7 @@ audience: 与师哥/导师讨论时的独立分析文档
 
 ## A. 一句话总结
 
-**v2plus 在 v2 (OpenVLA-OFT + InSpire) 基础上新增 Focused Spatial Forcing 通道（FastVGGT teacher + 多源融合 focus mask），并增加真机扰动评测；可行性高（核心组件均有开源 + 实验室真机硬件），novelty 集中在"显式提示 × 隐式 3D 对齐 × 多源 focus mask × 真机"四点叠加。**
+**v2plus 在 v2 (OpenVLA-OFT + InSpire) 基础上新增 Focused Spatial Forcing 通道（FastVGGT teacher + 双源融合 focus mask），并增加真机扰动评测；可行性高（核心组件均有开源 + 实验室真机硬件），novelty 集中在"显式提示 × 隐式 3D 对齐 × 双源 focus mask × 真机"四点叠加。**
 
 ## B. Novelty 分析
 
@@ -26,7 +26,7 @@ audience: 与师哥/导师讨论时的独立分析文档
 | # | Novelty | 文献中是否空白 | 师哥提示对应 |
 |---|---|---|---|
 | **1** | 显式方向词提示（InSpire）与隐式 3D 表征对齐（Spatial Forcing）的**叠加效应** | **空白**——InSpire 与 SF 从未在同一项目中叠加验证 | ✅ "加 3D 是好想法" |
-| **2** | **多源融合 focus mask**（方向词GT + SAM2 + DINOv2 CLS attention）调制 SF loss | **完全空白**——SF 原论文是均匀监督；其他工作（AttentionVoxel/Gaze-Reg）单源 | ✅ "spatial forcing 但需要 focus 在重要位置，背景可弱" |
+| **2** | **双源融合 focus mask**（方向词GT + DINOv2 CLS attention）调制 SF loss | **完全空白**——SF 原论文是均匀监督；其他工作（AttentionVoxel/Gaze-Reg）单源 | ✅ "spatial forcing 但需要 focus 在重要位置，背景可弱" |
 | **3** | **三段量化 focus weight**（前景 1.0 / 上下文 0.5 / 背景 0.1）的实证 | **空白**——SF 原论文 $m_i \equiv 1$；其他工作多用硬 mask（0/1） | ✅ "不相关背景监督可以更弱点" |
 | **4** | **真机扰动评测**（3 任务 × 3 扰动维度 × 360 episode） | **部分空白**——SF 仅 RoboTwin 仿真，InSpire 仅小规模真机 | ✅ "按 InSpire 的会，要在真机上验证" |
 
@@ -38,7 +38,7 @@ audience: 与师哥/导师讨论时的独立分析文档
 | 隐式 3D 表征对齐 | ❌ | ✅ | ❌ | ✅ **(继承)** |
 | VGGT 用作 teacher | ❌ | ✅（中间层对齐） | ❌（policy 阶段并行 encoder，劣等）| ✅ **(SF 优等做法)** |
 | Focus mask 调制 | ❌ | ❌（均匀） | ❌（patch top-K，不调 loss） | ✅ **(v2plus 创新)** |
-| 多源 mask 融合 | ❌ | ❌ | ❌ | ✅ **(v2plus 创新)** |
+| 双源 mask 融合 | ❌ | ❌ | ❌ | ✅ **(v2plus 创新)** |
 | 三段量化（fg/ctx/bg） | ❌ | ❌ | ❌ | ✅ **(v2plus 创新)** |
 | LIBERO-Plus 7 维评测 | ❌（仅 clean OOD） | ❌（仅 RoboTwin clean） | ❌（仅 LIBERO clean） | ✅ **(继承 v2)** |
 | 真机扰动评测 | ✅（小规模） | ❌ | ✅（背景/空间/目标）| ✅ **(继承 InSpire 协议)** |
@@ -54,7 +54,7 @@ audience: 与师哥/导师讨论时的独立分析文档
 - **同方向**：都关注 VLA 视觉利用机制（FocusVLA 自述局限 #3）
 - **不同实现**：
   - FocusVLA：架构改造（Cascaded Attention + patch-level top-K + channel gate）
-  - v2plus：**轻量 monitoring + 隐式 3D 监督**（不改架构，仅加 projector + 多源 mask loss）
+  - v2plus：**轻量 monitoring + 隐式 3D 监督**（不改架构，仅加 projector + 双源 mask loss）
 - **互补**：v2plus 的视觉 ablation 提供 FocusVLA 自述局限 #3 的实证证据
 - **回应**：v2plus 直接回应 FocusVLA 4 大局限的 #1（背景纹理）、#2（初始状态）、#3（VLM 视觉利用）、#4（robustness benchmark 评测）
 
@@ -71,19 +71,20 @@ audience: 与师哥/导师讨论时的独立分析文档
 | OpenVLA-OFT 主干 | github.com/openvla/openvla | ✅ HuggingFace 已发权重 |
 | FastVGGT teacher | github.com/mystorm16/FastVGGT | ✅ ICLR 2026，4× 加速 |
 | Spatial Forcing 参考代码 | github.com/OpenHelix-Team/Spatial-Forcing | ✅ 已发，~30 行核心修改 |
-| SAM2 + GroundedSAM | facebookresearch/sam2 + IDEA-Research/Grounded-SAM | ✅ 已发 |
-| DINOv2 | facebookresearch/dinov2 | ✅ 已发 |
+| DINOv2 | facebookresearch/dinov2 | ✅ 已在 OpenVLA-OFT vision encoder 中，免费副产物 |
 | LeRobot 真机 SDK | huggingface/lerobot | ✅ 已发 |
 | LIBERO-Plus 评测 | huggingface.co/senyufei/LIBERO-Plus | ✅ 已发 |
 | **真机硬件平台** | **实验室已有**（用户确认） | ✅ |
 
 **核心代码增量**：
 - FSF projector 模块：~30 行（参考 Spatial Forcing 原论文）
-- Focus mask 多源融合管线：~150 行（Source A/B/C 各 ~50 行）
+- Focus mask 双源融合管线：~100 行（Source A 方向词倒推 + Source C DINOv2 CLS attention，各 ~50 行）
 - VGGT 离线缓存 pipeline：~100 行（WebDataset 格式）
 - 真机数据采集协议：~200 行（基于 LeRobot 改）
 
-**总增量代码 ≈ 480 行**，对 2 大二本科生（已熟悉 PyTorch + LoRA）可控。
+**总增量代码 ≈ 430 行**，对 2 大二本科生（已熟悉 PyTorch + LoRA）可控。
+
+> **设计取舍说明**：v2plus 设计稿曾考虑引入 SAM2 作 Source B，但因"v2 + FSF 最简增量"原则未引入（SAM2/GroundedSAM 属于 v3 工具链）；P3 stretch ablation 可作备用。SAM2 在论文 §2 Related 中作为相关工作（SAM2Act 等）提及。
 
 ### C.2 算力可行性
 
@@ -138,7 +139,7 @@ audience: 与师哥/导师讨论时的独立分析文档
 | 评测 cell（真机）| 0 | 12 | +12 cell |
 | 总 GPU-h | 175 | 230 | +31% |
 | 新增代码量 | 200 行 | 680 行 | +240% |
-| 新增组件 | InSpire plugin | InSpire + FSF projector + 多源 mask + VGGT 缓存 + 真机 | +4 组件 |
+| 新增组件 | InSpire plugin | InSpire + FSF projector + 双源 mask + VGGT 缓存 + 真机 | +4 组件 |
 | 团队人月 | 24 | 24（紧约束）| +0% |
 | 预算 | ¥10K | ¥10K | +0% |
 
@@ -152,7 +153,7 @@ audience: 与师哥/导师讨论时的独立分析文档
 |---|---|---|---|
 | LIBERO-Plus 评测超 GPU-h 预算 | 50% | 低（降 instance 即可） | < 1 天 |
 | 真机数据 50 demo 不够 fine-tune | 45% | 中 | 1-3 天调 fine-tune 策略 |
-| Focus mask 多源无差异（H5 失败）| 40% | 中（novelty 降级） | 1-2 天改叙事 |
+| Focus mask 双源无差异（H5 失败）| 40% | 中（novelty 降级） | 1-2 天改叙事 |
 | FSF Loss 在 OpenVLA-OFT 上退化 SR | 30% | 高 | < 1 周（切 v2 only） |
 | VGGT 离线缓存超磁盘 | 30% | 中 | 1-3 天（fp8 量化或 streaming） |
 
@@ -160,7 +161,7 @@ audience: 与师哥/导师讨论时的独立分析文档
 
 ### D.2 与 v2 风险的对比
 
-v2 也有 5 个 top 风险（InSpire 代码未释、方向词 GT 噪声、cls head 不学、LoRA 工程坑、FocusVLA 代码未释）。v2plus 新增 4 个风险（VGGT 缓存、FSF 收敛、Focus mask 多源、真机不够），但**所有 v2plus 新风险都可通过 fallback 退到 v2**。
+v2 也有 5 个 top 风险（InSpire 代码未释、方向词 GT 噪声、cls head 不学、LoRA 工程坑、FocusVLA 代码未释）。v2plus 新增 4 个风险（VGGT 缓存、FSF 收敛、Focus mask 双源、真机不够），但**所有 v2plus 新风险都可通过 fallback 退到 v2**。
 
 **等价于 v2plus = v2 + 一些可选的额外组件**，组件失败时退到 v2 完整方案，总体风险可控。
 
@@ -174,7 +175,7 @@ v2 也有 5 个 top 风险（InSpire 代码未释、方向词 GT 噪声、cls he
 | 2 | "按 InSpire 的会，要在真机上验证" | 真机 3 任务 × 50 demo × 3 扰动维度（[[../研究报告/05_真机平台与数据标注方案]]） |
 | 3 | "参考 arXiv:2510.12276，隐式 3D 表征对齐" | FSF loss = SF loss + focus mask 调制（[[../立项调研/01_主方案_FocusedSpatialForcing]] §2） |
 | 4 | "FocusVLA 中也用了 VGGT，看做法是否有区别" | SF（中间层对齐优等）vs FocusVLA（policy 并行劣等）对比（[[../研究报告/03_FocusVLA_中_VGGT_用法剖析]]） |
-| 5 | "spatial forcing 需要 focus 在重要位置" | 多源融合 focus mask（[[../研究报告/04_Focus_Mask_设计调研]]） |
+| 5 | "spatial forcing 需要 focus 在重要位置" | 双源融合 focus mask（[[../研究报告/04_Focus_Mask_设计调研]]） |
 | 6 | "不相关背景的监督可以更弱点" | 三段量化 fg=1.0 / ctx=0.5 / bg=0.1（[[../立项调研/01_主方案_FocusedSpatialForcing]] §3） |
 | 7 | "vggt 续作可以大致看下" | FastVGGT 主选 + π³/StreamVGGT/HD-VGGT 续作综述（[[../研究报告/02_VGGT_及后续工作综述]]） |
 

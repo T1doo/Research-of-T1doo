@@ -10,15 +10,16 @@ tags:
   - FastVGGT
   - Layer24
   - FocusMask
-  - 多源融合
-status: 工作版v1
+  - 双源融合
+status: 工作版v2（纯净 v2plus：去 SAM2，仅用 v2 内工具）
 audience: 项目组 + 导师 + 师哥 + workshop paper §3 Method
 ---
 
 # 01 · 主方案 · FocusedSpatialForcing on OpenVLA-OFT
 
 > **方法代号**：**FSF**（FocusedSpatialForcing）
-> **一句话**：以冻结 FastVGGT 为 teacher，对 OpenVLA-OFT Layer 24 视觉 token 做余弦相似度对齐；对齐 loss 的 per-token 权重由方向词 GT × SAM2 × DINOv2 CLS attention 三源融合的 focus mask 调制（前景 1.0 / 上下文 0.5 / 背景 0.1）；与 v2 的 InSpire 显式方向词提示叠加。
+> **一句话**：以冻结 FastVGGT 为 teacher，对 OpenVLA-OFT Layer 24 视觉 token 做余弦相似度对齐；对齐 loss 的 per-token 权重由 **方向词 GT × DINOv2 CLS attention 双源融合**的 focus mask 调制（前景 1.0 / 上下文 0.5 / 背景 0.1）；与 v2 的 InSpire 显式方向词提示叠加。
+> **设计原则（v2 纯净版）**：focus mask 来源仅使用 v2 体系内已有工具——方向词 GT 推导（v2 复用）与 DINOv2 CLS attention（已在 OpenVLA-OFT vision encoder 中，免费）。**不引入 SAM2 / GroundedSAM**（属 v3 工具链），保持 v2 → v2plus 是最简增量升级路径。
 
 ## § 1 · 方法学完整描述
 
@@ -30,8 +31,8 @@ audience: 项目组 + 导师 + 师哥 + workshop paper §3 Method
         ┌───────────────────┼───────────────────────────────┐
         │                   │                                 │
         ▼                   ▼                                 ▼
-   FastVGGT teacher     OpenVLA-OFT 7B + LoRA r=16        SAM2 / DINOv2 (Focus Mask sources)
-   (冻结、离线缓存)      ──────────────────────             ──────────────────
+   FastVGGT teacher     OpenVLA-OFT 7B + LoRA r=16        DINOv2 attn + 方向词 GT 投影 (Focus Mask sources)
+   (冻结、离线缓存)      ──────────────────────             (DINOv2 已在 vision encoder 中,免费)
         │             SigLIP+DINOv2 patch embeddings              │
         │                   │                                     │
         ▼                   ▼ (256 patch token)                   │
@@ -116,7 +117,7 @@ $$\mathcal{L}_{direction} = -\frac{1}{T} \sum_{t=1}^{T} \log P_{\theta}(d_t^{gt}
 
 - Student 投影后特征：$\tilde{x}_i^V = \text{MLP}(\text{BN}(x_i^{V,L24})) + E_i \in \mathbb{R}^{1024}$
 - Teacher 特征：$f_i^{3D,L23} \in \mathbb{R}^{1024}$（FastVGGT aggregator penultimate layer，离线预提取）
-- Focus mask：$m_i \in [0.1, 1.0]$（多源融合后的三段量化）
+- Focus mask：$m_i \in [0.1, 1.0]$（双源融合后的三段量化）
 
 $$\boxed{\mathcal{L}_{FSF} = -\frac{1}{\sum_{i=1}^{N} m_i} \sum_{i=1}^{N} m_i \cdot \cos\Big( \tilde{x}_i^V,\; f_i^{3D,L23} \Big)}$$
 
@@ -131,9 +132,11 @@ $$\boxed{\mathcal{L}_{FSF} = -\frac{1}{\sum_{i=1}^{N} m_i} \sum_{i=1}^{N} m_i \c
 | 物理直觉 | 全图都监督 | "focus 在重要位置，背景弱" |
 | **来源** | Li et al. 2025 (2510.12276) | 师哥 2026-05-27 提示 + 本项目方法学 |
 
-## § 3 · Focus Mask 多源融合的具体实现
+## § 3 · Focus Mask 双源融合的具体实现
 
-### 3.1 三个来源的设计
+> **设计姿态**：v2plus 仅使用 **两个 v2 体系内的源**——Source A（方向词 GT 倒推，复用 v2 工具）+ Source C（DINOv2 CLS attention，已在 OpenVLA-OFT vision encoder 中）。**不引入 Source B（SAM2/GroundedSAM）**——SAM2 属 v3 工具链，引入会破坏 v2 → v2plus 的最简增量原则，且 DINOv2 attention + 方向词 GT 投影已能提供足够的 focus 信号。师哥提示"focus 在重要位置"的具体定义留给这两个互补的源共同决定。
+
+### 3.1 两个来源的设计
 
 #### Source A · 方向词 GT 倒推 2D Gaussian Mask（成本最低，与 v2 工具复用）
 
@@ -164,36 +167,17 @@ def focus_mask_source_A(p_eef, p_obj, K, R, t, H=224, W=224, patch_grid=14):
 ```
 
 **优点**：完全免费（pose 已在 demo 中），与 v2 方向词 GT 推导工具 100% 复用。
-**缺点**：高斯假设过强，对非凸物体（如长棒）覆盖不全；只覆盖 2 个中心，不能描述物体的全部形状。
+**缺点**：高斯假设过强，对非凸物体（如长棒）覆盖不全；只覆盖 2 个中心，不能描述物体的全部形状——但与 Source C（saliency）互补，可由后者补足形状信息。
 
-#### Source B · SAM2 物体硬 Mask（与 v3 工具协同）
+#### Source B（已排除，理由见下方说明框）
 
-**输入**：当前帧 RGB；Task 中 target object 文本（如 "alphabet soup"，从 LIBERO task name 解析）
-
-**算法**（离线一次性预提取）：
-
-```python
-def focus_mask_source_B(image, target_text, sam2_model, grounding_dino):
-    # 1. GroundingDINO 找物体 bbox
-    bbox = grounding_dino(image, text=target_text)  # (x_min, y_min, x_max, y_max)
-    
-    # 2. SAM2 用 bbox 提示分割
-    M_B_binary = sam2_model.segment(image, bbox_prompt=bbox)  # (224, 224), {0, 1}
-    
-    # 3. 形态学膨胀 (dilation kernel=5) 包含物体边界周围细节
-    M_B_dilated = scipy.ndimage.binary_dilation(M_B_binary, structure=np.ones((5,5)))
-    
-    # 4. 下采样到 14×14 patch grid (patch 被覆盖比例 >= 0.5 时设为 1)
-    m_B_patch = (M_B_dilated.reshape(14, 16, 14, 16).mean(axis=(1,3)) >= 0.5).astype(float)
-    return m_B_patch.flatten()  # (196,), {0, 1}
-```
-
-**追踪策略**：
-- LIBERO 仿真：相机固定，物体集合有限 → 每 episode 仅在 keyframe（首帧 / 抓取瞬间 / 释放瞬间）跑 SAM2，中间帧用光流或 SAM2 video propagation 跨帧传播
-- 真机：相机可能轻微振动 → 每 5 帧重新跑 SAM2，中间帧光流
-
-**优点**：边界精确，对各种形状鲁棒。
-**缺点**：依赖 SAM2 的开放词汇分割质量；LIBERO 渲染图与 SAM2 训练分布有差距（v3 已验证 mIoU ≈ 0.6-0.75，可接受）。
+> [!warning] 为什么不引入 SAM2
+> 早期设计稿曾考虑用 SAM2 + GroundingDINO 作为"精确分割"来源。在 2026-05-27 设计 review 中决定排除，理由：
+> 1. **v2 工具链纯净性**：SAM2 / GroundedSAM 属于 v3 工具链；v2plus 设计姿态是"v2 + FSF 最简增量"，引入 v3 工具会破坏路径明确性
+> 2. **足够性论证**：Source A（方向词 GT 投影的 2D 高斯，定位精确）+ Source C（DINOv2 CLS attention，形状互补）已能覆盖师哥"focus 在重要位置"的两类信息
+> 3. **工程量**：装通 GroundedSAM + SAM2 + 视频 propagation pipeline 约 5 天工程，节省可投入主路 LoRA 调参
+> 4. **N0 决策项简化**：少一项"SAM2 mIoU ≥ 0.6" 阻断条件
+> 5. **如未来需要**：fallback 路径明确——若 H5 失败且 M-A/M-C 都无效，可在 P3 stretch ablation 中引入 SAM2 作为额外消融
 
 #### Source C · DINOv2 CLS Attention（免费 saliency）
 
@@ -219,21 +203,21 @@ def focus_mask_source_C(image, dinov2_model):
 **优点**：零额外计算（DINOv2 本就在 OpenVLA-OFT 前向中），无需额外标注。
 **缺点**：DINOv2 saliency 对显著物体好，但对 task-relevant 物体不一定（可能突出装饰物或干扰物）。
 
-### 3.2 三源融合策略（4 种候选，主路 F1）
+### 3.2 双源融合策略（4 种候选，主路 F1）
 
 | 策略 | 公式 | 优点 | 缺点 |
 |---|---|---|---|
-| **F1 加权平均（主路推荐）** | $m_i = \text{clip}(0.3 m_i^A + 0.4 m_i^B + 0.3 m_i^C, 0.1, 1.0)$ → 三段量化 | 平滑、稳定 | 权重需调 |
-| F2 Max 融合 | $m_i = \max(m_i^A, m_i^B, m_i^C)$ | 召回高（任一源说重要就重要） | 易过拟合显著区域 |
-| F3 学习 gating | $m_i = \sigma(g_\theta([m_i^A, m_i^B, m_i^C]))$（小 MLP 学权重） | 数据驱动 | 引入额外可训参数，过拟合风险 |
+| **F1 加权平均（主路推荐）** | $m_i = \text{clip}(0.5 m_i^A + 0.5 m_i^C, 0.1, 1.0)$ → 三段量化 | 平滑、稳定；A/C 互补（定位 + 形状） | 权重需调 |
+| F2 Max 融合 | $m_i = \max(m_i^A, m_i^C)$ | 召回高（任一源说重要就重要） | 易过拟合显著区域 |
+| F3 学习 gating | $m_i = \sigma(g_\theta([m_i^A, m_i^C]))$（小 MLP 学权重） | 数据驱动 | 引入额外可训参数，过拟合风险 |
 | F4 阶梯量化（3-level，直接对应师哥语言） | $m_i \in \{0.1, 0.5, 1.0\}$ 按 max 分级 | 与师哥"前景1/上下文0.5/背景0.1"直接对应 | 边界硬，可能不平滑 |
 
 **主路 F1 详细**（A3 ablation 验证此为最优）：
 
 ```python
-def fuse_focus_masks_F1(m_A, m_B, m_C, w_A=0.3, w_B=0.4, w_C=0.3,
+def fuse_focus_masks_F1(m_A, m_C, w_A=0.5, w_C=0.5,
                         thr_fg=0.7, thr_ctx=0.3, fg=1.0, ctx=0.5, bg=0.1):
-    m_raw = w_A * m_A + w_B * m_B + w_C * m_C
+    m_raw = w_A * m_A + w_C * m_C
     
     # 三段量化
     m = np.where(m_raw >= thr_fg, fg,
@@ -248,7 +232,7 @@ def fuse_focus_masks_F1(m_A, m_B, m_C, w_A=0.3, w_B=0.4, w_C=0.3,
 
 | 参数 | 初值 | 消融区间 | 依据 |
 |---|---|---|---|
-| $w_A, w_B, w_C$ | 0.3, 0.4, 0.3 | $\{0.2,0.3,0.4\}^3$（保持 $\sum=1$） | SAM2 mask 精度最高，故 $w_B$ 略大 |
+| $w_A, w_C$ | 0.5, 0.5 | $w_A \in \{0.3, 0.4, 0.5, 0.6, 0.7\}$，$w_C = 1 - w_A$ | A 是定位精确（小范围 Gaussian），C 是形状互补（saliency map）；50/50 起步 |
 | $\text{thr}_{fg}$ | 0.7 | {0.5, 0.6, 0.7, 0.8} | 阈值越高，前景越严 |
 | $\text{thr}_{ctx}$ | 0.3 | {0.2, 0.3, 0.4} | 上下文阈值 |
 | 前景 weight | 1.0 | 固定 | Spatial Forcing 默认 |
@@ -259,15 +243,15 @@ def fuse_focus_masks_F1(m_A, m_B, m_C, w_A=0.3, w_B=0.4, w_C=0.3,
 
 | Ablation 编号 | mask 来源 | 目的 |
 |---|---|---|
-| **M-None** | $m_i \equiv 1$（=SF 原版） | 对照基线，验证 focus 是否有用 |
-| M-A | 仅 Source A（方向词 GT） | 验证最便宜的单源是否足够 |
-| M-B | 仅 Source B（SAM2） | 验证精确分割单源是否足够 |
-| M-C | 仅 Source C（DINOv2） | 验证免费 saliency 单源是否足够 |
-| M-AB | A + B 加权融合 | 测两源（最便宜 + 最精确）够不够 |
-| **M-ABC（主路）** | A + B + C F1 融合 | 主提交 |
+| **M-None** | $m_i \equiv 1$（=SF 原版均匀监督） | 对照基线，验证 focus 是否有用 |
+| M-A | 仅 Source A（方向词 GT 投影 Gaussian） | 验证"定位"单源是否足够 |
+| M-C | 仅 Source C（DINOv2 CLS attention） | 验证"形状/saliency"单源是否足够 |
+| **M-AC（主路）** | A + C F1 融合 | 主提交 |
 | M-Random | 随机 mask（同前景占比） | 验证"focus location"重要而非"mask diversity" |
 
-预期 H5 结论：M-ABC > M-A ≈ M-B ≈ M-C > M-None > M-Random。
+共 **5 组**（v2 纯净版从 7 组降到 5 组，删除 M-B / M-AB / M-ABC，因为 Source B = SAM2 不引入）。
+
+预期 H5 结论：M-AC > M-A ≈ M-C > M-None > M-Random。
 
 ## § 4 · VGGT Teacher 配置与离线缓存
 
@@ -463,19 +447,19 @@ $$\overline{\Delta_{V3}^{real}} < \overline{\Delta_{V1}^{real}} - 5\text{pp}, \q
 
 **真机扰动 cell**：3 任务 × 3 扰动 = 9 cell；每 cell 30 episode；每 cell SR std ≈ 9-12pp；5pp 差异需要 30 episode × 3 任务 ≈ power 0.6（适中）。
 
-### 6.5 H5（多源 focus 优于单源，v2plus 核心创新假设）
+### 6.5 H5（双源 focus 优于单源/均匀，v2plus 核心创新假设）
 
-**命题**：在 A3 ablation 中，M-ABC（三源融合）的平均 SR 高于任一单源（M-A, M-B, M-C）+ 1pp：
+**命题**：在 A3 ablation 中，M-AC（双源融合）的平均 SR 高于任一单源（M-A, M-C）+ 1pp：
 
-$$\text{SR}_{M\text{-}ABC} > \max(\text{SR}_{M\text{-}A}, \text{SR}_{M\text{-}B}, \text{SR}_{M\text{-}C}) + 1\text{pp}$$
+$$\text{SR}_{M\text{-}AC} > \max(\text{SR}_{M\text{-}A}, \text{SR}_{M\text{-}C}) + 1\text{pp}$$
 
-同时 **三源融合显著优于 M-None（SF 原版均匀监督）** 与 M-Random（随机 mask）：
+同时 **双源融合显著优于 M-None（SF 原版均匀监督）** 与 M-Random（随机 mask）：
 
-$$\text{SR}_{M\text{-}ABC} > \text{SR}_{M\text{-}None} + 1.5\text{pp}, \quad p < 0.05$$
+$$\text{SR}_{M\text{-}AC} > \text{SR}_{M\text{-}None} + 1.5\text{pp}, \quad p < 0.05$$
 
-$$\text{SR}_{M\text{-}ABC} > \text{SR}_{M\text{-}Random} + 3\text{pp}, \quad p < 0.05$$
+$$\text{SR}_{M\text{-}AC} > \text{SR}_{M\text{-}Random} + 3\text{pp}, \quad p < 0.05$$
 
-**意义**：H5 是 v2plus 区别于 SF 原论文最直接的"方法学贡献"实证。如果 H5 不成立但 M-ABC > M-None 仍 holds，说明 focus 是有用的、但融合方式无差异——也是有价值的 finding。
+**意义**：H5 是 v2plus 区别于 SF 原论文最直接的"方法学贡献"实证。如果 H5 不成立但 M-AC > M-None 仍 holds，说明 focus 是有用的、但融合方式无差异——也是有价值的 finding。
 
 ## § 7 · 主评测设计
 
@@ -519,7 +503,7 @@ $$\text{SR}_{M\text{-}ABC} > \text{SR}_{M\text{-}Random} + 3\text{pp}, \quad p <
 |---|---|---|---|---|
 | **A1: VGGT layer 选择** | VGGT Layer {12, 18, 23} | 3 × 3 维子集 × 3 seed × 200 inst | 15 h | Layer 23 最优 |
 | **A2: SF 监督层位** | OpenVLA-OFT Layer {8, 16, 24, 32} | 4 × 3 维子集 × 3 seed × 200 inst | 20 h | Layer 24 最优 |
-| **A3: Focus mask 来源（H5 核心）** | M-None/A/B/C/AB/ABC/Random | 7 × 3 维子集 × 3 seed × 200 inst | 35 h | 多源融合优于单源 |
+| **A3: Focus mask 来源（H5 核心）** | M-None / M-A / M-C / M-AC / M-Random | 5 × 3 维子集 × 3 seed × 200 inst | 25 h | 双源融合优于单源 |
 | **A4: β 扫描** | β ∈ {0.1, 0.3, 0.5, 0.8} | 4 × 3 维子集 × 3 seed × 200 inst | 20 h | β=0.5 最优 |
 | **A5: 背景 weight 扫描** | bg_w ∈ {0, 0.05, 0.1, 0.3} | 4 × 3 维子集 × 3 seed × 200 inst | 20 h | 0.1 最优 |
 | **A6: 视觉利用 ablation（继承 v2）** | token dropout 3 强度 × patch mask 2 模式 × attn vis | 同 v2 | 25 h | 机制层证据 |
@@ -540,16 +524,16 @@ $$\text{SR}_{M\text{-}ABC} > \text{SR}_{M\text{-}Random} + 3\text{pp}, \quad p <
 
 - D1-D3: OpenVLA-OFT + LoRA 环境装通
 - D4-D5: FastVGGT 仓库装通（github.com/OpenHelix-Team/FastVGGT），在 5 张 LIBERO 渲染图上前向测试
-- D6-D7: GroundedSAM + SAM2 装通
+- D6-D7: DINOv2 attention 提取脚本 + Focus mask Source A 早期开始（**不装 SAM2/GroundedSAM**，v2 纯净路径）
 - D8-D9: 真机平台（实验室已有）测试，跑 1 个 demo 录制流程
-- D10-D14: 方向词 GT 标注脚本 + Focus mask 3 源 pipeline 实现
+- D10-D14: 方向词 GT 标注脚本 + Focus mask 双源 pipeline 实现（Source A + Source C）
 
 **N0 末决策**：4 仓库装通 + FastVGGT 在 LIBERO 上 mIoU ≥ 0.5 → 主路；否则 fallback VGGT 原版
 
 ### P1 · 复现 + Sanity（M1-M3，06-08）
 
 - M1: V1/V2 LoRA 训练 + FastVGGT 离线缓存（11 GPU-h）
-- M2: Focus mask 3 源在 100 帧上目视验证 + FSF projector 代码 + V3 sanity check 训练
+- M2: Focus mask 双源在 100 帧上目视验证 + FSF projector 代码 + V3 sanity check 训练
 - M3: V3 完整 LoRA 训练（4 suite × 3 seed）+ clean LIBERO 评测 V1/V2/V3 + 真机数据采集（3 任务 × 50 demo）
 
 **N1 末决策**：V3 clean SR ≥ V1 - 3pp & VGGT 缓存完整 → Go P2；退化 > 10pp → 切 v2 only
@@ -560,7 +544,7 @@ $$\text{SR}_{M\text{-}ABC} > \text{SR}_{M\text{-}Random} + 3\text{pp}, \quad p <
 - M5: 剩余 4 维评测（60 GPU-h）+ A1/A2 ablation
 - M6: A3 mask 来源 ablation（H5 核心）+ 真机 V1 训练（150 demo 少量 fine-tune）
 
-**N2 末决策**：H1 ≥ 2 维度显著 & H5 M-ABC > M-None → Go P3；完全无增益 → negative finding workshop
+**N2 末决策**：H1 ≥ 2 维度显著 & H5 M-AC > M-None → Go P3；完全无增益 → negative finding workshop
 
 ### P3 · 机制分析 + 真机评测（M7-M9，12-02）
 
@@ -597,7 +581,7 @@ $$\text{SR}_{M\text{-}ABC} > \text{SR}_{M\text{-}Random} + 3\text{pp}, \quad p <
 | v2plus 新增：FSF projector 模块（~30 行代码） | **新增** |
 | v2plus 新增：Focus mask 3 源融合 | **部分新**（Source A 复用 v2 工具） |
 | v2plus 新增：真机数据采集与标注 | **新增**（实验室已有真机平台） |
-| v3 的 GroundedSAM/SAM2 工具链 | **部分复用**（作为 Focus mask Source B） |
+| v3 的 GroundedSAM/SAM2 工具链 | **不复用**（v2plus 走 v2 纯净路径；DINOv2 attention + 方向词 GT 投影已足够提供 focus 信号） |
 | v3 的 attention-mask IoU 计算 | **不复用**（v2plus 主路不依赖此） |
 
 ## § 10 · 主方案的预期 paper 章节映射

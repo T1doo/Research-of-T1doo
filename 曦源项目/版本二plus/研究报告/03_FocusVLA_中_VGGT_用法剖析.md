@@ -588,11 +588,10 @@ flowchart TD
     Img[RGB Image] --> VGGT[VGGT Aggregator Layer 23]
   end
 
-  subgraph FocusMask[Focus Mask 来源]
+  subgraph FocusMask[Focus Mask 来源（双源）]
     A[Source A: 方向词 GT Gaussian]
-    B[Source B: SAM2 物体 mask]
     C[Source C: DINOv2 CLS attention]
-    A & B & C --> Fuse[融合策略 F1-F4]
+    A & C --> Fuse[融合策略 F1]
     Fuse --> Mask[Focus Mask m_i]
   end
 

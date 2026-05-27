@@ -813,9 +813,9 @@ A100 80GB 上原 VGGT 训练时显存占用：
 - Optimizer + activations：18GB
 - **总计：66GB**（边界）
 
-如果加上 SAM2 + DINOv2 mask 生成（FSF 增量），显存爆掉。
+如果加上 DINOv2 mask 生成（FSF 增量；v2plus 不引入 SAM2，保持 v2 工具链纯净），显存仍紧张。
 
-FastVGGT 把 VGGT forward 显存降到 11GB，**总计 61GB**，有 19GB 余量给 SAM2/DINOv2。
+FastVGGT 把 VGGT forward 显存降到 11GB，**总计 61GB**，有 19GB 余量给 DINOv2 CLS attention 提取（v2plus 设计稿曾考虑引入 SAM2 作 Source B，但因 v2 工具链纯净性原则未引入；P3 stretch ablation 可作备用）。
 
 #### 理由 4：兼容性
 
