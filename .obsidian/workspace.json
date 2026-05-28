@@ -27,12 +27,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "References/liSpatialForcingImplicit2025.md",
+                "file": "曦源项目/版本二plus/递交材料/1-2.申请书填写草稿.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "liSpatialForcingImplicit2025"
+              "title": "1-2.申请书填写草稿"
             }
           }
         ],
@@ -220,10 +220,18 @@
       "templater-obsidian:Templater": false
     }
   },
-  "active": "d22b08b27d2deb4b",
+  "active": "da74b0113ecee4b1",
   "lastOpenFiles": [
-    "论文探索/A_视觉利用鲁棒性/papers/2026-03_FocusVLA_Zhang.md",
+    "曦源项目/版本二plus/~WRL0002.tmp",
+    "曦源项目/版本二plus/~WRD0000.tmp",
+    "曦源项目/版本二plus/~WRL0001.tmp",
+    "曦源项目/版本二plus/~WRL0004.tmp",
+    "曦源项目/版本二plus/~WRL0003.tmp",
+    "曦源项目/版本二plus/~WRD0002.tmp",
+    "曦源项目/版本二plus/~$2.【需提交】曦源项目申请书（2026年版）.doc",
+    "提示词.md",
     "References/liSpatialForcingImplicit2025.md",
+    "论文探索/A_视觉利用鲁棒性/papers/2026-03_FocusVLA_Zhang.md",
     "曦源项目/版本二/递交材料/1-2.【需提交】曦源项目申请书（2026年版）.doc",
     "曦源项目/版本二/递交材料",
     "曦源项目/版本二/新建文件夹",
@@ -239,8 +247,6 @@
     "论文探索/00_综述报告.md",
     "曦源项目/递交材料/1-2.申请书填写草稿.md",
     "曦源项目/版本二/立项调研",
-    "曦源项目/版本二",
-    "曦源项目/新建文件夹",
     "曦源项目/版本一/立项/调研/04_Baseline模型对比.md",
     "曦源项目/版本一/立项/调研/02_方向二_轻量级异常检测.md",
     "曦源项目/版本一/立项/调研/01_方向一_动态自适应推理.md",
@@ -252,12 +258,6 @@
     "曦源项目/版本一/立项/二次调研/03_SmolVLA代码可注入点分析.md",
     "曦源项目/版本一/立项/二次调研/01_AAC相关工作扩展.md",
     "曦源项目/版本一/立项/二次调研/02_RobustVLA相关工作扩展.md",
-    "曦源项目/版本一/立项/二次调研/00_主线深度可行性分析.md",
-    "曦源项目/版本一/立项/调研",
-    "曦源项目/版本一/立项/二次调研",
-    "曦源项目/版本一/立项",
-    "曦源项目/版本一/递交材料/~$2.申请书_已填开题报告.docx",
-    "曦源项目/版本一/递交材料/1-3.立项信息表填写草稿.md",
     "曦源项目/Pictures/image from 二次调研plan.png"
   ]
 }
